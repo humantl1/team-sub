@@ -1,0 +1,4 @@
+# 'esbuild' is included in allowedBuiltDependencies to support builds in sandboxed environments
+# where only explicitly allowed dependencies can be used.
+allowedBuiltDependencies:
+  - esbuild

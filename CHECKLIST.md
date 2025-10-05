@@ -1,10 +1,9 @@
 # Build Checklist
 
 ## Active
-- _None yet_
 
+- _None yet_
 ## Planned
-- [ ] Set up Vitest + Testing Library environment
 - [ ] Install Tailwind CSS and wire global styles
 - [ ] Create base app shell with routing, providers, and layout
 - [ ] Initialize Supabase project configuration and env management
@@ -20,4 +19,5 @@
 - [x] Configure strict TypeScript compiler options (`tsconfig.json`)
 - [x] Reviewed AGENTS.md and captured project constraints
 - [x] Created project `.gitignore` covering Node/Vite/Supabase artifacts
+- [x] Set up Vitest + Testing Library environment
 - [x] Initialized Vite + React TypeScript project with pnpm

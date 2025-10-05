@@ -11,7 +11,11 @@
     // Let Vite and modern tooling handle module graph transformations.
     "module": "ESNext",
     // Include Vite's typed environment helpers so `import.meta.env` stays typed.
-    "types": ["vite/client"],
+    "types": [
+      "vite/client",
+      // Pull in Vitest's ambient typings so test files understand globals like `describe`.
+      "vitest"
+    ],
     // Speed up builds by trusting library declaration files from npm.
     "skipLibCheck": true,
 

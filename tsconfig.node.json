@@ -34,5 +34,9 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["vite.config.ts"]
+  "include": [
+    "vite.config.ts",
+    // Include the Vitest config so editor tooling type-checks it alongside the Vite config.
+    "vitest.config.ts"
+  ]
 }
