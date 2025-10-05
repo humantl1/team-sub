@@ -1,11 +1,18 @@
 {
   "compilerOptions": {
+    // Persist incremental build info inside node_modules so we do not litter the repo with cache files.
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    // Target modern evergreen browsers; Vite transpiles down as needed.
     "target": "ES2022",
+    // Align class-fields behavior with the runtime so decorators/hooks act predictably.
     "useDefineForClassFields": true,
+    // Standard lib set for browser apps that interact with the DOM and iterable collections.
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    // Let Vite and modern tooling handle module graph transformations.
     "module": "ESNext",
+    // Include Vite's typed environment helpers so `import.meta.env` stays typed.
     "types": ["vite/client"],
+    // Speed up builds by trusting library declaration files from npm.
     "skipLibCheck": true,
 
     /* Bundler mode */
@@ -15,9 +22,18 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    // Provide ergonomic absolute imports that still resolve through bundler-aware paths.
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
 
     /* Linting */
+    // Keep the full strict safety net enabled so UI logic fails fast at compile time.
     "strict": true,
+    "noImplicitAny": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,

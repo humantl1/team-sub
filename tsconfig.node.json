@@ -1,9 +1,13 @@
 {
   "compilerOptions": {
+    // Keep incremental build metadata in node_modules so that CI stays clean.
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    // Node-oriented build targets align with the Vite config file runtime.
     "target": "ES2023",
     "lib": ["ES2023"],
+    // Vite config runs in modern Node, so we keep modules in ESNext mode.
     "module": "ESNext",
+    // Pull in Node globals typings for scripts like vite.config.ts.
     "types": ["node"],
     "skipLibCheck": true,
 
@@ -13,9 +17,17 @@
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
+    // Mirror the alias and strictness story from the app config so build tooling shares the same rules.
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
 
     /* Linting */
     "strict": true,
+    "noImplicitAny": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,

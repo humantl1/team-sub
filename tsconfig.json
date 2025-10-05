@@ -1,4 +1,29 @@
 {
+  // Shared compiler settings that codify the "strict by default" stance described in AGENTS.md.
+  // Keeping them here means every sub-project that references this config inherits the same ruleset.
+  "compilerOptions": {
+    // `strict` flips on the full family of safety checks so we surface questionable types immediately.
+    "strict": true,
+    // We still spell out cornerstone flags explicitly to make their intent obvious to future contributors.
+    "noImplicitAny": true,
+    // Force array indexing operations to acknowledge that out-of-range access returns `undefined`.
+    "noUncheckedIndexedAccess": true,
+    // Prevent optional properties from being widened to include `undefined` automatically when reading.
+    "exactOptionalPropertyTypes": true,
+    // Guard against accidental switch fall-throughs now that games can have many status states.
+    "noFallthroughCasesInSwitch": true,
+    // Align class field initialization with the JavaScript runtime semantics.
+    "useDefineForClassFields": true,
+    // Keep modules in ESNext mode so the bundler-style resolution strategy remains valid.
+    "module": "ESNext",
+    // Match the bundler-friendly module resolution strategy Vite expects.
+    "moduleResolution": "bundler",
+    // Allow absolute-style imports that map back to `src/` for cleaner feature modules.
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },

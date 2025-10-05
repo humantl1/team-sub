@@ -4,8 +4,6 @@
 - _None yet_
 
 ## Planned
-- [ ] Configure strict TypeScript compiler options (`tsconfig.json`)
-- [ ] Add ESLint, Prettier, and jsx-a11y tooling
 - [ ] Set up Vitest + Testing Library environment
 - [ ] Install Tailwind CSS and wire global styles
 - [ ] Create base app shell with routing, providers, and layout
@@ -18,6 +16,8 @@
 - [ ] Set up CI workflow running `pnpm check`
 
 ## Completed
+- [x] Add ESLint, Prettier, and jsx-a11y tooling
+- [x] Configure strict TypeScript compiler options (`tsconfig.json`)
 - [x] Reviewed AGENTS.md and captured project constraints
 - [x] Created project `.gitignore` covering Node/Vite/Supabase artifacts
 - [x] Initialized Vite + React TypeScript project with pnpm
