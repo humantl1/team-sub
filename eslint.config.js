@@ -8,7 +8,8 @@ import eslintConfigPrettier from 'eslint-config-prettier'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 // Derive a flat-config-friendly version of the jsx-a11y preset by wiring the plugin object explicitly
-// and reusing its recommended rule map. The original preset still ships legacy keys (parserOptions, etc.).
+// and reusing its recommended rule map. The original preset still ships legacy keys (parserOptions, etc.),
+// so attempting to spread it directly under ESLint 9 flat config throws parserOptions/plugins errors.
 const jsxA11yFlatConfig = {
   plugins: {
     'jsx-a11y': jsxA11y,
