@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+/dist/
+/dist-ssr/
+/.vite/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+vitest.log
+
+# Local overrides
+*.local
+
+# Testing coverage
+coverage/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.sw?
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Supabase local state
+.supabase/
+
+# MacOS
+.DS_Store

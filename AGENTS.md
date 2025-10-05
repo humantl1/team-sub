@@ -1,6 +1,29 @@
 # Project: Simple mobile friendly web app for managing sports team substitutions.
 
-> Goals: This is a personal learning project. Ship quickly, learn fundamentals, adopt _lightweight_ best practices early, keep complexity low. **SPA with Vite**; **Supabase** for auth + Postgres; strict TypeScript; Tailwind + a tiny component set; TanStack Query for API calls/caching. No SSR for now.
+# App Functionality:
+- User can create a login and login
+- User can create a "Team"
+- User can add members to the "Team"
+- Team and members are persistent through login sessions
+- User can start a "Game" session
+- For the game session, user can set how many players will be on the field at a time and which players are active.
+Active players will appear in an interactive list
+- The list order is editable by the user via drag and drop interactions
+- The order of the list represents the order planned for players on the field and the next substitutions.
+
+# Goals:
+- This is a personal learning project.
+- Ship quickly, learn fundamentals, adopt _lightweight_ best practices early, keep complexity low.
+- **SPA with Vite**; **Supabase** for auth + Postgres; strict TypeScript; Tailwind + a tiny component set; TanStack Query for API calls/caching. No SSR for now.
+
+# IMPORTANT!!
+- Before proceeding with a step, explicitly point out of the developer will need to interact with the graphical UI of a tool or website.
+- Proceed in small atomic chunks of implementation. Ensure each step is testable and test it.
+
+# Working Flow
+- Always create and maintaint tasks in the CHECKLIST.md file
+- Ensure tasks are added as discovered, mark active tasks, stale tasks, and completed tasks
+- Since this is a learning project as well as a practical project, add comments throughout even boiler plate code explaining the reason for adding it as well as what it does. It's okay to be unusually verbose in comments for this project.
 
 ---
 
