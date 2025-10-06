@@ -2,9 +2,9 @@
 
 ## Active
 
-- _None yet_
+- [ ] _(select next active item)_
+
 ## Planned
-- [ ] Create base app shell with routing, providers, and layout
 - [ ] Initialize Supabase project configuration and env management
 - [ ] Implement authentication flow with magic links and session context
 - [ ] Define initial database schema for teams, players, and substitutions
@@ -14,6 +14,7 @@
 - [ ] Set up CI workflow running `pnpm check`
 
 ## Completed
+- [x] Create base app shell with routing, providers, and layout
 - [x] Align Vite `resolve.alias` with `@/*` path mapping
 - [x] Move legacy CSS into `src/styles/` and update imports
 - [x] Move existing app shell files into `src/app/` and verify tests pass

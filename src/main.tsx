@@ -1,6 +1,6 @@
 /**
  * Entry point for the Vite-powered React SPA.
- * Keeping this file tiny makes it easier to verify the tooling stack before we start layering providers.
+ * App now wraps the router and global providers; this file simply mounts it once and loads global styles.
  */
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'

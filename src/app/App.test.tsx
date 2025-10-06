@@ -1,22 +1,34 @@
 /**
- * Visual-focused smoke test for the Tailwind-enabled starter app.
- * We assert against specific utility classes and copy so QA can quickly spot regressions in theming.
+ * Smoke test validating that the router, layout, and Tailwind showcase render together without regressions.
  */
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import App from './App'
 
-// The visual shell should render Tailwind-driven layout primitives and seeded roster data.
 describe('App', () => {
-  it('renders the Tailwind showcase layout with seeded roster sections', () => {
+  it('renders the routed Tailwind showcase with navigation chrome', () => {
     const { container } = render(<App />)
 
-    // Main landmark picks up Tailwind flexbox + gradient utilities.
-    const main = screen.getByRole('main')
-    expect(main).toHaveClass('flex')
-    expect(main).toHaveClass('w-full')
-    expect(main).toHaveClass('bg-gradient-to-br')
+    // Navigation shell should expose the project title and the planned routes.
+    expect(screen.getByText(/team sub planner/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /dashboard/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /login/i })).toBeInTheDocument()
 
-    // Hero header anchors the layout; QA will look for this title atop the glassmorphic card.
+    // Skip link stays hidden until focused, but we can validate the wiring via its accessible name.
+    expect(screen.getByRole('link', { name: /skip to content/i })).toHaveAttribute('href', '#main-content')
+
+    // Main landmark is provided by the RootLayout; child routes render inside it.
+    const main = screen.getByRole('main')
+    expect(main).toHaveAttribute('id', 'main-content')
+
+    // The gradient wrapper lives directly under <main> now that routing owns the outer shell.
+    const gradientWrapper = main.querySelector('div.bg-gradient-to-br')
+    if (!gradientWrapper) {
+      throw new Error('Expected the Tailwind gradient wrapper to mount inside the main outlet')
+    }
+    expect(gradientWrapper).toHaveClass('flex')
+    expect(gradientWrapper).toHaveClass('w-full')
+
+    // Hero header anchors the layout; QA looks for this title atop the glassmorphic card.
     expect(
       screen.getByRole('heading', { level: 1, name: /team substitutions sandbox/i }),
     ).toBeInTheDocument()
@@ -25,18 +37,23 @@ describe('App', () => {
     expect(screen.getByRole('heading', { level: 2, name: /starters on the field/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 2, name: /bench ready to rotate/i })).toBeInTheDocument()
 
-    // List items render eight seeded players (4 starters + 4 bench) so visual QA can confirm grid spacing.
-    expect(screen.getAllByRole('listitem')).toHaveLength(8)
+    // Gather lists within the showcase card so nav list items are excluded from the assertion.
+    const showcaseSection = container.querySelector('section')
+    if (!showcaseSection) {
+      throw new Error('Expected the Tailwind showcase section to be in the document')
+    }
+
+    const rosterLists = within(showcaseSection).getAllByRole('list')
+    expect(rosterLists).toHaveLength(2)
+
+    const playerItems = rosterLists.flatMap((list) => within(list).getAllByRole('listitem'))
+    expect(playerItems).toHaveLength(8)
 
     // The CTA button should expose the Tailwind primary accent so gradients can be pulsed during QA.
     const pulseButton = screen.getByRole('button', { name: /pulse gradient/i })
     expect(pulseButton).toHaveClass('bg-purple-500')
 
     // Snapshot the first section container to capture key utility classes for quick regression checks.
-    const showcaseSection = container.querySelector('section')
-    if (!showcaseSection) {
-      throw new Error('Expected the Tailwind showcase section to be in the document')
-    }
     expect(showcaseSection).toHaveClass(
       'rounded-3xl',
       'bg-slate-900/70',
