@@ -4,8 +4,10 @@
  */
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+// Load Tailwind's generated layers first so our temporary legacy CSS can override specific widgets as needed.
+import '@/styles/tailwind.css'
+import '@/styles/index.css'
+import App from '@/app/App'
 
 // React 18 `createRoot` mounts once so we can add providers without remounting in tests.
 const rootElement = document.getElementById('root')

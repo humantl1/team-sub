@@ -42,3 +42,6 @@ coverage/
 
 # MacOS
 .DS_Store
+
+# Local Agent docs
+CURRENT_TASK.md

@@ -1,0 +1,7 @@
+/**
+ * Tailwind injects a normalized base layer and utility classes via these directives.
+ * Keeping them isolated in this file makes it easy to trace where the CSS bundle originates from.
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

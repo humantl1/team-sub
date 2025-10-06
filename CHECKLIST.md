@@ -4,7 +4,6 @@
 
 - _None yet_
 ## Planned
-- [ ] Install Tailwind CSS and wire global styles
 - [ ] Create base app shell with routing, providers, and layout
 - [ ] Initialize Supabase project configuration and env management
 - [ ] Implement authentication flow with magic links and session context
@@ -15,9 +14,18 @@
 - [ ] Set up CI workflow running `pnpm check`
 
 ## Completed
+- [x] Align Vite `resolve.alias` with `@/*` path mapping
+- [x] Move legacy CSS into `src/styles/` and update imports
+- [x] Move existing app shell files into `src/app/` and verify tests pass
+- [x] Scaffold src directories (`app/`, `components/`, `features/`, `hooks/`, `lib/`, `styles/`)
+- [x] Evaluate directory structure for configs, tests, and feature slices; propose adjustments if needed
+- [x] Capture pnpm/esbuild/threading notes in AGENTS.md or README for future reference
+- [x] Validate Vitest suite health (`pnpm test -- --run`) and document any harness quirks
 - [x] Add ESLint, Prettier, and jsx-a11y tooling
 - [x] Configure strict TypeScript compiler options (`tsconfig.json`)
 - [x] Reviewed AGENTS.md and captured project constraints
 - [x] Created project `.gitignore` covering Node/Vite/Supabase artifacts
 - [x] Set up Vitest + Testing Library environment
 - [x] Initialized Vite + React TypeScript project with pnpm
+- [x] Install Tailwind CSS and wire global styles
+- [x] Create Tailwind-driven visual regression test for starter app

@@ -23,8 +23,23 @@ Active players will appear in an interactive list
 # Working Flow
 - Always create and maintaint tasks in the CHECKLIST.md file
 - Ensure tasks are added as discovered, mark active tasks, stale tasks, and completed tasks
+- Before executing a task, plan and document the task in CURRENT_TASK.md. Prompt the developer to approve the plan before executing. When new issues arise in a task, update the plan in CURRENT_TASK.md. This should always be used to work through problems.
 - Since this is a learning project as well as a practical project, add comments throughout even boiler plate code explaining the reason for adding it as well as what it does. It's okay to be unusually verbose in comments for this project.
 
+# General Troubleshooting
+- Flag the need for networked installs before running pnpm
+- Pin third-party packages to stable major versions unless a beta is explicitly desired
+- When interacting with `pnpm approve-builds`, expect interactive prompts and document the required local step for the user before proceeding.
+- Run Vitest immediately after major UI refactors to surface snapshot/class mismatches before moving on.
+
+## Sandbox & Tooling Footnotes
+- `pnpm install` for Vitest pulls `esbuild`; grant `allow-scripts` and `allowedBuiltDependencies=esbuild` so the binary download succeeds without manual prompts.
+- Vitest is configured with `pool: "threads"` to respect the CLI sandbox’s process limits; run suites in CI mode via `pnpm test -- --run` to avoid watch-mode restrictions.
+- Shared DOM matchers live in `src/test/setup.ts`; keep new tests importing from `@testing-library/*` so this setup file activates automatically.
+
+## CSS & Tailwind Footnotes
+- Audit legacy CSS whenever layering Tailwind to avoid conflicting layout primitives; consider removing or porting them before styling tasks.
+- Prefer deterministic, class-level assertions over DOM snapshots for Tailwind-heavy components to minimize brittleness.
 ---
 
 ## 0) TL;DR Stack
