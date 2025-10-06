@@ -1,0 +1,128 @@
+/**
+ * React context providing the authenticated Supabase session to the rest of the app.
+ * Centralizing the session wiring keeps auth logic out of page components and
+ * ensures every consumer reads from the same source of truth.
+ */
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
+import type { Session } from '@supabase/supabase-js'
+import { getSupabaseClient } from '@/lib/supabase'
+
+/**
+ * Description of the values exposed by the auth context. We surface the raw
+ * session alongside loading/error metadata so consuming components can render
+ * appropriate fallbacks while the initial session check resolves.
+ */
+export interface SupabaseAuthContextValue {
+  session: Session | null
+  isLoading: boolean
+  error: string | null
+  signOut: () => Promise<void>
+}
+
+const SupabaseAuthContext = createContext<SupabaseAuthContextValue | null>(null)
+
+export interface SupabaseAuthProviderProps {
+  children: ReactNode
+}
+
+export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
+  /**
+   * `useMemo` guarantees we only request a Supabase client once for the provider lifetime.
+   * The helper already memoizes the instance, but memoizing here avoids confusing React dev tools
+   * that would otherwise show the same object recreated every render.
+   */
+  const supabase = useMemo(() => getSupabaseClient(), [])
+
+  const [session, setSession] = useState<Session | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function bootstrapSession() {
+      setIsLoading(true)
+      const { data, error: sessionError } = await supabase.auth.getSession()
+
+      if (!isMounted) {
+        return
+      }
+
+      if (sessionError) {
+        // Persist a friendly error message so the login screen can surface it to the user.
+        setError(sessionError.message)
+        setSession(null)
+      } else {
+        setError(null)
+        setSession(data.session ?? null)
+      }
+
+      setIsLoading(false)
+    }
+
+    void bootstrapSession()
+
+    /**
+     * Supabase emits auth events whenever magic links resolve, tokens refresh, or users sign out.
+     * Subscribing here keeps the React state synchronized without polling.
+     */
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession)
+    })
+
+    return () => {
+      isMounted = false
+      listener.subscription.unsubscribe()
+    }
+  }, [supabase])
+
+  /**
+   * Tiny helper that wraps `supabase.auth.signOut` so consumers do not have to import the client.
+   * We update local state pessimistically because `onAuthStateChange` will fire a second time to
+   * confirm the sign-out succeeded.
+   */
+  const signOut = useCallback(async () => {
+    setIsLoading(true)
+    const { error: signOutError } = await supabase.auth.signOut()
+
+    if (signOutError) {
+      setError(signOutError.message)
+    } else {
+      setError(null)
+      setSession(null)
+    }
+
+    setIsLoading(false)
+  }, [supabase])
+
+  const value: SupabaseAuthContextValue = {
+    session,
+    isLoading,
+    error,
+    signOut,
+  }
+
+  return <SupabaseAuthContext.Provider value={value}>{children}</SupabaseAuthContext.Provider>
+}
+
+/**
+ * Convenience hook so components can read the session without dealing with `useContext` boilerplate.
+ * We throw eagerly if the provider is missing to make setup errors obvious during development.
+ */
+export function useSupabaseAuth() {
+  const context = useContext(SupabaseAuthContext)
+
+  if (!context) {
+    throw new Error('useSupabaseAuth must be used within a SupabaseAuthProvider')
+  }
+
+  return context
+}
