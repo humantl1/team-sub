@@ -27,6 +27,7 @@ describe('AppErrorBoundary', () => {
     await waitFor(() => expect(screen.getByText(/Error 404/i)).toBeInTheDocument())
     expect(screen.getByRole('heading', { name: /404/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /return to dashboard/i })).toBeInTheDocument()
+    expect(screen.getByText('Not found')).toBeInTheDocument()
   })
 
   it('shows developer diagnostics in development mode when an element throws', async () => {

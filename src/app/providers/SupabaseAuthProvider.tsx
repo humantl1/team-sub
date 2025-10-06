@@ -58,7 +58,7 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
   }, [])
 
   const [session, setSession] = useState<Session | null>(null)
-  const [isLoading, setIsLoading] = useState(() => supabase !== null)
+  const [isLoading, setIsLoading] = useState(() => supabase !== null ? true : false)
   const [error, setError] = useState<string | null>(clientError)
 
   useEffect(() => {

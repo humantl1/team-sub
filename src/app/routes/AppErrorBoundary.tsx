@@ -36,7 +36,31 @@ export function AppErrorBoundary() {
        * readable fallbacks.
        */
       const statusText = routeError.statusText || 'Unexpected routing error'
-      const shortMessage = routeError.data?.message ?? statusText
+      const shortMessage = (() => {
+        /**
+         * React Router exposes the thrown `Response`'s body via `routeError.data`. Loaders frequently throw
+         * plain strings (e.g., `throw new Response('Not found', { status: 404 })`) or JSON objects. We
+         * normalize those possibilities so developers see the exact diagnostic that originated the error
+         * instead of always falling back to the HTTP status text.
+         */
+        if (!routeError.data) {
+          return statusText
+        }
+
+        if (typeof routeError.data === 'string') {
+          return routeError.data
+        }
+
+        if (typeof routeError.data === 'object' && 'message' in routeError.data) {
+          const message = (routeError.data as { message: unknown }).message
+
+          if (typeof message === 'string' && message.trim().length > 0) {
+            return message
+          }
+        }
+
+        return statusText
+      })()
 
       return {
         code: routeError.status,
