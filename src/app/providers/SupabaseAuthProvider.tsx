@@ -74,13 +74,20 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
      * Supabase emits auth events whenever magic links resolve, tokens refresh, or users sign out.
      * Subscribing here keeps the React state synchronized without polling.
      */
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession)
-    })
+    const { data: listener, error: listenerError } = supabase.auth.onAuthStateChange(
+      (_event, nextSession) => {
+        setSession(nextSession)
+      },
+    )
+
+    if (listenerError && isMounted) {
+      // Surface the subscription error so the login flow can signal configuration/network issues.
+      setError(listenerError.message)
+    }
 
     return () => {
       isMounted = false
-      listener.subscription.unsubscribe()
+      listener?.subscription.unsubscribe()
     }
   }, [supabase])
 
