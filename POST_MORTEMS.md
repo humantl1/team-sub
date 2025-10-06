@@ -17,6 +17,7 @@
 ### Snapshot mismatch in visual test
 - Inline snapshot failed because list numbering renders as nested DOM nodes.
 - Replaced the heavy snapshot with targeted assertions against Tailwind utility class names and counts.
+
 # Post Mortem: Supabase client + documentation gotchas
 
 ## Issues Encountered
@@ -36,4 +37,23 @@
 ## Lessons Learned / Action Items
 - Always double-check long-form documentation edits with smaller patches to preserve project history and avoid unintentional deletions.
 - Maintain a running checklist entry when TODO comments or warnings appear in output so they do not get lost after the immediate change merges.
-- Next step: update Supabase-related tests to reuse a shared client or mock layer, eliminating the GoTrue warning.
+
+# Post Mortem: Supabase magic-link authentication implementation
+
+## Issues Encountered
+
+### App smoke test broke once routes became auth-gated
+- Wrapping the home route in `RequireAuth` meant the existing `App.test.tsx` no longer rendered the Tailwind showcase because the test didn’t provide a session.
+- Fixed by fully mocking the Supabase client within the test, stubbing `getSession`, `onAuthStateChange`, and `signOut` to mimic an authenticated user before importing `<App />`.
+
+### Vitest run failed on missing Supabase env vars
+- Adding the real auth provider triggered `getSupabaseClient()` inside tests, which threw when `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` were absent.
+- Resolved by stubbing those env variables at the top of the test suites that exercise the provider so configuration guards stay intact without leaking global state.
+
+### Reused Supabase singleton mocked per-test
+- The login form and guard suites each mocked Supabase differently; forgetting to reset mocks caused cross-test leakage during early iterations.
+- Standardized the mocks by casting to `SupabaseClient`, clearing them in `afterEach`, and relying on helper creators so new tests can stay consistent.
+
+## Lessons Learned / Action Items
+- When introducing cross-cutting providers, update foundational smoke tests immediately—they act as the canary for route guards and global wiring.
+- Supabase client access should always be wrapped in easily mockable helpers; otherwise, tests will keep tripping over env requirements.

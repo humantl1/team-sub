@@ -27,6 +27,7 @@ Active players will appear in an interactive list
 - Before executing a task, plan and document the task in CURRENT_TASK.md. Prompt the developer to approve the plan before executing. When new issues arise in a task, update the plan in CURRENT_TASK.md. This should always be used to work through problems.
 - Since this is a learning project as well as a practical project, add comments throughout even boiler plate code explaining the reason for adding it as well as what it does. It's okay to be unusually verbose in comments for this project.
 - Maintain a running checklist entry when TODO comments or warnings appear in output so they do not get lost after the immediate change merges.
+- After completing a full task, ask the developer if a post mortem should be written to POST_MORTEMS.md
 
 # General Troubleshooting
 - Flag the need for networked installs before running pnpm
@@ -42,6 +43,10 @@ Active players will appear in an interactive list
 ## CSS & Tailwind Footnotes
 - Audit legacy CSS whenever layering Tailwind to avoid conflicting layout primitives; consider removing or porting them before styling tasks.
 - Prefer deterministic, class-level assertions over DOM snapshots for Tailwind-heavy components to minimize brittleness.
+
+## Supabase Footnontes
+- When introducing cross-cutting providers, update foundational smoke tests immediately—they act as the canary for route guards and global wiring.
+- Supabase client access should always be wrapped in easily mockable helpers; otherwise, tests will keep tripping over env requirements.
 
 ---
 

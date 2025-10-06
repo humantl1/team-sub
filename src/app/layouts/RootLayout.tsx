@@ -4,17 +4,16 @@
  * so feature routes can focus on domain-specific UI without recreating scaffolding.
  */
 import { NavLink, Outlet } from 'react-router-dom'
-
-/**
- * Simple navigation links hard-coded for now.
- * We will replace this with authenticated navigation once Supabase wiring lands.
- */
-const NAV_LINKS = [
-  { href: '/', label: 'Dashboard' },
-  { href: '/login', label: 'Login' },
-]
+import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider'
 
 export function RootLayout() {
+  /**
+   * Reading auth state here lets the top navigation reflect the current user (email + sign-out button)
+   * while still rendering immediately during the initial loading phase.
+   */
+  const { session, isLoading, signOut } = useSupabaseAuth()
+  const userEmail = session?.user.email ?? null
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
       {/* Skip link ensures keyboard users can bypass navigation chrome quickly. */}
@@ -31,10 +30,41 @@ export function RootLayout() {
             Team Sub Planner
           </span>
           <ul className="flex items-center gap-3 text-sm font-medium">
-            {NAV_LINKS.map((link) => (
-              <li key={link.href}>
+            <li>
+              <NavLink
+                to="/"
+                className={({ isActive }) =>
+                  `rounded-full px-3 py-1 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-400 ${
+                    isActive
+                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/40'
+                      : 'text-slate-200 hover:text-white'
+                  }`
+                }
+                end
+              >
+                Dashboard
+              </NavLink>
+            </li>
+            {session ? (
+              <li className="flex items-center gap-2">
+                <span className="hidden text-xs uppercase tracking-widest text-slate-400 sm:inline">
+                  {userEmail}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void signOut()
+                  }}
+                  disabled={isLoading}
+                  className="rounded-full border border-slate-700 px-3 py-1 text-xs uppercase tracking-wide text-slate-200 transition hover:border-purple-400 hover:text-white disabled:cursor-not-allowed"
+                >
+                  {isLoading ? 'Signing out…' : 'Sign out'}
+                </button>
+              </li>
+            ) : (
+              <li>
                 <NavLink
-                  to={link.href}
+                  to="/login"
                   className={({ isActive }) =>
                     `rounded-full px-3 py-1 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-400 ${
                       isActive
@@ -42,12 +72,11 @@ export function RootLayout() {
                         : 'text-slate-200 hover:text-white'
                     }`
                   }
-                  end={link.href === '/'}
                 >
-                  {link.label}
+                  Login
                 </NavLink>
               </li>
-            ))}
+            )}
           </ul>
         </nav>
       </header>

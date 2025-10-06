@@ -1,11 +1,12 @@
 /**
  * Aggregates global React providers that should wrap the entire application.
- * Starting with the TanStack Query client keeps data fetching consistent
- * and gives us a single place to append future providers (Supabase session, theming, etc.).
+ * TanStack Query gives us request caching while the Supabase auth provider exposes
+ * the current session to each route and component.
  */
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { SupabaseAuthProvider } from '@/app/providers/SupabaseAuthProvider'
 
 export interface AppProvidersProps {
   children: ReactNode
@@ -18,5 +19,9 @@ export function AppProviders({ children }: AppProvidersProps) {
    */
   const [queryClient] = useState(() => new QueryClient())
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SupabaseAuthProvider>{children}</SupabaseAuthProvider>
+    </QueryClientProvider>
+  )
 }
