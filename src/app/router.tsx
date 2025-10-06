@@ -4,6 +4,7 @@
  */
 import { createBrowserRouter } from 'react-router-dom'
 import { RootLayout } from '@/app/layouts/RootLayout'
+import { AppErrorBoundary } from '@/app/routes/AppErrorBoundary'
 import { HomeRoute } from '@/app/routes/HomeRoute'
 import { LoginRoute } from '@/app/routes/LoginRoute'
 import { RequireAuth } from '@/app/routes/RequireAuth'
@@ -15,6 +16,7 @@ export const routes = [
   {
     path: '/',
     element: <RootLayout />,
+    errorElement: <AppErrorBoundary />,
     children: [
       {
         element: <RequireAuth />,

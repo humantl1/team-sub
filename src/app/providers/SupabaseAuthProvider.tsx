@@ -12,7 +12,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import type { Session } from '@supabase/supabase-js'
+import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { getSupabaseClient } from '@/lib/supabase'
 
 /**
@@ -33,19 +33,44 @@ export interface SupabaseAuthProviderProps {
   children: ReactNode
 }
 
+interface SupabaseClientState {
+  client: SupabaseClient | null
+  clientError: string | null
+}
+
 export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
   /**
-   * `useMemo` guarantees we only request a Supabase client once for the provider lifetime.
-   * The helper already memoizes the instance, but memoizing here avoids confusing React dev tools
-   * that would otherwise show the same object recreated every render.
+   * Attempt to initialize the Supabase client a single time. When required environment variables
+   * are missing we capture the failure instead of throwing so the UI can render a helpful message
+   * instead of a blank screen.
    */
-  const supabase = useMemo(() => getSupabaseClient(), [])
+  const { client: supabase, clientError } = useMemo<SupabaseClientState>(() => {
+    try {
+      return { client: getSupabaseClient(), clientError: null }
+    } catch (caught) {
+      const message =
+        caught instanceof Error
+          ? caught.message
+          : 'Failed to initialize Supabase. Check your environment variables.'
+
+      return { client: null, clientError: message }
+    }
+  }, [])
 
   const [session, setSession] = useState<Session | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(() => supabase !== null)
+  const [error, setError] = useState<string | null>(clientError)
 
   useEffect(() => {
+    if (!supabase) {
+      /**
+       * Without a Supabase client there is nothing to bootstrap. We still flip `isLoading` off so the
+       * rest of the app can show the explanatory error captured above.
+       */
+      setIsLoading(false)
+      return
+    }
+
     let isMounted = true
 
     async function bootstrapSession() {
@@ -97,6 +122,11 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
    * confirm the sign-out succeeded.
    */
   const signOut = useCallback(async () => {
+    if (!supabase) {
+      setError('Supabase client is unavailable, so there is no active session to sign out from.')
+      return
+    }
+
     setIsLoading(true)
     const { error: signOutError } = await supabase.auth.signOut()
 
