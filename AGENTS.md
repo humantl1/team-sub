@@ -19,12 +19,14 @@ Active players will appear in an interactive list
 # IMPORTANT!!
 - Before proceeding with a step, explicitly point out of the developer will need to interact with the graphical UI of a tool or website.
 - Proceed in small atomic chunks of implementation. Ensure each step is testable and test it.
+- Always double-check long-form documentation edits with smaller patches to preserve project history and avoid unintentional deletions.
 
 # Working Flow
 - Always create and maintaint tasks in the CHECKLIST.md file
 - Ensure tasks are added as discovered, mark active tasks, stale tasks, and completed tasks
 - Before executing a task, plan and document the task in CURRENT_TASK.md. Prompt the developer to approve the plan before executing. When new issues arise in a task, update the plan in CURRENT_TASK.md. This should always be used to work through problems.
 - Since this is a learning project as well as a practical project, add comments throughout even boiler plate code explaining the reason for adding it as well as what it does. It's okay to be unusually verbose in comments for this project.
+- Maintain a running checklist entry when TODO comments or warnings appear in output so they do not get lost after the immediate change merges.
 
 # General Troubleshooting
 - Flag the need for networked installs before running pnpm
@@ -40,6 +42,7 @@ Active players will appear in an interactive list
 ## CSS & Tailwind Footnotes
 - Audit legacy CSS whenever layering Tailwind to avoid conflicting layout primitives; consider removing or porting them before styling tasks.
 - Prefer deterministic, class-level assertions over DOM snapshots for Tailwind-heavy components to minimize brittleness.
+
 ---
 
 ## 0) TL;DR Stack
@@ -269,13 +272,12 @@ VITE_SUPABASE_ANON_KEY=...
 
 `src/lib/supabase.ts`
 ```ts
-import { createClient } from "@supabase/supabase-js";
-const url = import.meta.env.VITE_SUPABASE_URL as string;
-const anon = import.meta.env.VITE_SUPABASE_ANON_KEY as string; // ⚠️ Treat anon key as limited but still sensitive
-export const supabase = createClient(url, anon, {
-  auth: { persistSession: true, autoRefreshToken: true },
-});
+import { getSupabaseClient } from "@/lib/supabase";
+
+export const supabase = getSupabaseClient();
 ```
+
+> Always import `getSupabaseClient` (or a helper that wraps it) instead of calling `createClient` inside components so the app reuses a single authenticated instance.
 
 ### Auth (magic link + allowlist)
 
@@ -291,7 +293,10 @@ Enable **Row Level Security** on any user tables. Example login flow UI:
 `src/features/auth/LoginForm.tsx`
 ```tsx
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseClient } from "@/lib/supabase";
+
+const supabase = getSupabaseClient();
+
 export function LoginForm() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
@@ -390,8 +395,8 @@ pnpm add @tanstack/react-query
 
 Mocking pointers:
 
-- For Supabase, inject the client or mock `@/lib/supabase` using Vitest.
-- For router-aware components, wrap with `MemoryRouter` in tests.
+- For Supabase, inject the client or mock `@/lib/supabase` using Vitest; stub `supabase.auth` helpers when flows depend on auth callbacks.
+- For router-aware components, wrap with `MemoryRouter` **and** the shared AuthProvider so navigation + session context match production.
 
 Example test:
 ```tsx

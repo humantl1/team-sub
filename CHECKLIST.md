@@ -1,19 +1,19 @@
 # Build Checklist
 
 ## Active
-
 - [ ] _(select next active item)_
 
 ## Planned
-- [ ] Initialize Supabase project configuration and env management
 - [ ] Implement authentication flow with magic links and session context
 - [ ] Define initial database schema for teams, players, and substitutions
 - [ ] Add TanStack Query hooks for core data operations
 - [ ] Build roster management MVP (list, add, substitute players)
 - [ ] Configure deployment target (Vercel or Netlify) with env vars
 - [ ] Set up CI workflow running `pnpm check`
+- [ ] Resolve Vitest GoTrue multiple-client warning by tightening Supabase test setup
 
 ## Completed
+- [x] Initialize Supabase project configuration and env management
 - [x] Create base app shell with routing, providers, and layout
 - [x] Align Vite `resolve.alias` with `@/*` path mapping
 - [x] Move legacy CSS into `src/styles/` and update imports
