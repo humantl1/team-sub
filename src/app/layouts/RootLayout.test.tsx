@@ -15,6 +15,12 @@ vi.mock('@/app/providers/SupabaseAuthProvider', () => ({
 
 const mockedUseSupabaseAuth = vi.mocked(useSupabaseAuth)
 
+const ROUTER_FUTURE_FLAGS = {
+  /** Keep tests aligned with the production router's v7 feature opt-ins. */
+  v7_startTransition: true,
+  v7_relativeSplatPath: true,
+}
+
 function renderRootLayout() {
   /**
    * We mirror the production router shape: RootLayout owns the `errorElement`, so throwing a response from
@@ -29,10 +35,14 @@ function renderRootLayout() {
         errorElement: <AppErrorBoundary />,
       },
     ],
-    { initialEntries: ['/'] },
+    {
+      initialEntries: ['/'],
+      /** Align the test router with the app's v7 transition and splat-path flags so behaviour stays consistent and warnings disappear. */
+      future: ROUTER_FUTURE_FLAGS,
+    },
   )
 
-  return render(<RouterProvider router={router} />)
+  return render(<RouterProvider router={router} future={ROUTER_FUTURE_FLAGS} />)
 }
 
 describe('RootLayout', () => {

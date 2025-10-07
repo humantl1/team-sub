@@ -2,7 +2,7 @@
  * Focused tests for the route guard that enforces Supabase authentication.
  */
 import { render, screen, waitFor } from '@testing-library/react'
-import { createMemoryRouter, MemoryRouter, RouterProvider } from 'react-router-dom'
+import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { vi } from 'vitest'
 import type { Session } from '@supabase/supabase-js'
 import { RequireAuth } from './RequireAuth'
@@ -13,6 +13,31 @@ vi.mock('@/app/providers/SupabaseAuthProvider', () => ({
 }))
 
 const mockedUseSupabaseAuth = vi.mocked(useSupabaseAuth)
+
+const ROUTER_FUTURE_FLAGS = {
+  /**
+   * Enabling the v7 behaviours keeps test routers aligned with the production instance so warnings stay hidden and we rehearse the next major release early.
+   */
+  v7_startTransition: true,
+  v7_relativeSplatPath: true,
+}
+
+function renderWithRouter(
+  routerConfig: Parameters<typeof createMemoryRouter>[0],
+  options: Parameters<typeof createMemoryRouter>[1] = {},
+) {
+  const { future, ...rest } = options
+  const mergedFuture = {
+    ...ROUTER_FUTURE_FLAGS,
+    ...(future ?? {}),
+  }
+  const router = createMemoryRouter(routerConfig, {
+    ...rest,
+    future: mergedFuture,
+  })
+
+  return render(<RouterProvider router={router} future={mergedFuture} />)
+}
 
 describe('RequireAuth', () => {
   afterEach(() => {
@@ -28,11 +53,12 @@ describe('RequireAuth', () => {
       signOut: vi.fn(),
     })
 
-    render(
-      <MemoryRouter>
-        <RequireAuth />
-      </MemoryRouter>,
-    )
+    renderWithRouter([
+      {
+        path: '/',
+        element: <RequireAuth />,
+      },
+    ])
 
     expect(screen.getByText(/checking your session/i)).toBeInTheDocument()
   })
@@ -46,7 +72,7 @@ describe('RequireAuth', () => {
       signOut: vi.fn(),
     })
 
-    const router = createMemoryRouter(
+    renderWithRouter(
       [
         {
           path: '/',
@@ -57,8 +83,6 @@ describe('RequireAuth', () => {
       ],
       { initialEntries: ['/'] },
     )
-
-    render(<RouterProvider router={router} />)
 
     await waitFor(() => {
       expect(screen.getByText(/login screen/i)).toBeInTheDocument()
@@ -74,7 +98,7 @@ describe('RequireAuth', () => {
       signOut: vi.fn(),
     })
 
-    const router = createMemoryRouter(
+    renderWithRouter(
       [
         {
           path: '/',
@@ -84,8 +108,6 @@ describe('RequireAuth', () => {
       ],
       { initialEntries: ['/'] },
     )
-
-    render(<RouterProvider router={router} />)
 
     await waitFor(() => {
       expect(screen.getByText(/private area/i)).toBeInTheDocument()

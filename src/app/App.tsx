@@ -4,12 +4,15 @@
  */
 import { RouterProvider } from 'react-router-dom'
 import { AppProviders } from '@/app/providers/AppProviders'
-import { appRouter } from '@/app/router'
+import { appRouter, routerFutureFlags } from '@/app/router'
 
 function App() {
   return (
     <AppProviders>
-      <RouterProvider router={appRouter} />
+      {/**
+       * Pass the same future flags to `RouterProvider` that we used when creating the router so React Router enables the v7 behaviour and keeps warnings quiet in all environments.
+       */}
+      <RouterProvider router={appRouter} future={routerFutureFlags} />
     </AppProviders>
   )
 }
