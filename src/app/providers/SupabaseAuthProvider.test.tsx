@@ -26,6 +26,44 @@ function createSupabaseClientMock(overrides: Partial<SupabaseClient['auth']> = {
   } as unknown as SupabaseClient
 }
 
+/**
+ * Creates a strongly typed `Session` instance for the tests so we do not fall back to
+ * double type assertions. Centralising the stub also keeps repeated values like token
+ * placeholders and the user identifier in one place, which makes future tweaks easier to manage.
+ */
+function createSessionMock({ userId = 'user-123' }: { userId?: string } = {}): Session {
+  const mockUser = {
+    /**
+     * The Supabase session expects the full `User` shape, so we provide the minimum viable
+     * properties and let the optional fields use their implicit `undefined` default.
+     */
+    id: userId,
+    app_metadata: {},
+    user_metadata: {},
+    aud: 'authenticated',
+    created_at: new Date(0).toISOString(),
+  }
+
+  return {
+    /**
+     * Tokens are arbitrary strings for the purposes of our tests; they simply need to exist so
+     * the session mirrors what Supabase would return in production.
+     */
+    access_token: 'fake-access-token',
+    refresh_token: 'fake-refresh-token',
+    token_type: 'bearer',
+    /**
+     * We simulate a one-hour validity window so any logic that checks the expiry timestamp has a
+     * consistent reference point across tests.
+     */
+    expires_in: 3600,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    provider_token: null,
+    provider_refresh_token: null,
+    user: mockUser,
+  }
+}
+
 function Consumer() {
   const { error } = useSupabaseAuth()
   return <div>{error ?? 'no-error'}</div>
@@ -77,17 +115,10 @@ describe('SupabaseAuthProvider', () => {
 
   it('hydrates the session state when Supabase reports an existing session', async () => {
     /**
-     * We supply a minimal mock session so the provider can exercise its bootstrapping path the same
-     * way it would during a real page refresh where Supabase already knows the user is signed in.
+     * We hydrate the provider with a fully typed session so the code path mirrors a real refresh
+     * where Supabase already knows the user is signed in.
      */
-    const mockSession = {
-      access_token: 'fake-token',
-      refresh_token: 'fake-refresh-token',
-      token_type: 'bearer',
-      expires_in: 3600,
-      expires_at: Math.floor(Date.now() / 1000) + 3600,
-      user: { id: 'user-123' } as unknown,
-    } as unknown as Session
+    const mockSession = createSessionMock()
 
     const getSessionMock = vi.fn().mockResolvedValue({ data: { session: mockSession }, error: null })
 
@@ -128,14 +159,7 @@ describe('SupabaseAuthProvider', () => {
      * The provider sets loading state while signOut is in flight, so the component below exposes a
      * button we can click to trigger the call and assertions against the derived context values.
      */
-    const mockSession = {
-      access_token: 'fake-token',
-      refresh_token: 'fake-refresh-token',
-      token_type: 'bearer',
-      expires_in: 3600,
-      expires_at: Math.floor(Date.now() / 1000) + 3600,
-      user: { id: 'user-123' } as unknown,
-    } as unknown as Session
+    const mockSession = createSessionMock()
 
     const signOutMock = vi.fn().mockResolvedValue({ error: null })
 
