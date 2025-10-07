@@ -98,3 +98,55 @@
 ## Lessons Learned / Action Items
 - When reusing provider-sourced errors in local components, avoid layering duplicate states unless the UX explicitly calls for redundancy.
 - Favor testing the rendered UI after changes to shared context contracts; small state tweaks can ripple into surprising visual regressions even when logic seems straightforward.
+
+# Post Mortem: Supabase configuration error boundary
+
+## Issues Encountered
+
+### Disabled login form still rendered during configuration failures
+- Missing `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` left the login form on screen with controls disabled, which would confuse production users and suggested the app was usable when it was not.
+
+### Route boundary lacked Supabase-specific messaging
+- Our branded error boundary treated Supabase bootstrap failures as generic 500 errors, so developers had to inspect the console to learn that env vars were missing.
+
+## Resolution
+- Root layout now throws a dedicated `SupabaseConfigurationError` when the client is unavailable, ensuring React Router immediately renders the full-screen boundary instead of the login form.
+- `AppErrorBoundary` recognizes that error type and shows a clear headline plus the captured env guidance while still hiding diagnostics outside development builds.
+- Added focused tests to verify both the exception path and boundary rendering so future refactors keep the behaviour intact.
+
+## Lessons Learned / Action Items
+- Escalating unrecoverable configuration gaps into the router boundary provides a consistent UX and keeps “look broken but interactive” states from shipping.
+- When introducing new error classes, wire them into the shared boundary immediately and bake in regression tests so they remain discoverable for developers.
+# Magic-link auth enablement (2025-02-14)
+
+**What happened**
+- Verified Supabase project config (Data API, public schema, email templates) and populated an `allowed_emails` table with RLS policies so only matching users can read/insert their row.
+- Created `.env.local` with the project URL + anon key, restarted `pnpm dev`, and walked through the full magic-link login/logout flow to confirm the SPA wiring works outside mocks.
+- Ran `pnpm test -- --run`; suite passed, but no new tests were added for the happy/error paths we exercised manually.
+
+**Why it worked**
+- Supabase dashboard steps ensured every dependency (magic-link template, allowlist table, RLS policies) was in place before testing locally.
+- The existing React provider already handled session bootstrap and state changes, so once env vars were valid everything clicked without code edits.
+
+**Opportunities**
+- Add focused tests for the login success/error states, session restoration, and logout to prevent regressions without relying on manual walkthroughs.
+- Consider documenting the Supabase policy SQL in the repo (migration or README snippet) so others can reproduce the setup without digging through history.
+
+# Post Mortem: Supabase auth provider test coverage sweep (2025-02-14)
+
+## Issues Encountered
+
+### Hidden dependency on `@testing-library/user-event`
+- While adding the logout-flow test, the first implementation relied on `userEvent`, but the project has intentionally avoided that dependency to keep the test bundle lean.
+- Vitest failed during module resolution, forcing a rewrite of the interaction to use the already-installed `fireEvent` helper instead of introducing a new package.
+
+### Existing coverage disguised remaining work
+- The checklist called out both the LoginForm happy path and allowlist error scenarios, yet those tests already existed. Time was spent confirming behaviour rather than writing new assertions, which could have been avoided with inline notes pointing to the coverage.
+
+## Resolutions
+- Swapped the button interaction to `fireEvent.click`, eliminating the missing dependency and keeping the test consistent with the rest of the suite.
+- Documented in `CURRENT_TASK.md` when an item was already satisfied so future agents can skip redundant implementation steps.
+
+## Lessons Learned / Action Items
+- When reaching for additional Testing Library helpers, double-check whether the dependency is part of the current toolchain before adopting it; prefer the existing primitives when they meet the need.
+- Annotate checklist items once covered to prevent future rediscovery work—especially when the checklist mixes real gaps with verification tasks.
