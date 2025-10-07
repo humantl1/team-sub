@@ -10,6 +10,12 @@ interface RenderRouterOptions {
   initialEntries?: string[]
 }
 
+const ROUTER_FUTURE_FLAGS = {
+  /** Tests reuse the same future flags as production so React Router opts into v7 behaviours consistently. */
+  v7_startTransition: true,
+  v7_relativeSplatPath: true,
+}
+
 function renderRouterWithError(
   routerConfig: Parameters<typeof createMemoryRouter>[0],
   options: RenderRouterOptions = {},
@@ -20,8 +26,10 @@ function renderRouterWithError(
    */
   const router = createMemoryRouter(routerConfig, {
     initialEntries: options.initialEntries ?? ['/'],
+    /** Opt into the v7 transition and splat-path behaviours so the suite mirrors production. */
+    future: ROUTER_FUTURE_FLAGS,
   })
-  return render(<RouterProvider router={router} />)
+  return render(<RouterProvider router={router} future={ROUTER_FUTURE_FLAGS} />)
 }
 
 describe('AppErrorBoundary', () => {
