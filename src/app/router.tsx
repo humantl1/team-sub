@@ -52,7 +52,7 @@ export const routerFutureFlags = {
  * Default router instance used by the live application.
  * Tests can import {@link routes} and create memory routers where needed.
  *
- * We opt into React Router's upcoming v7 behaviours now (`future.v7_startTransition` and `future.v7_relativeSplatPath`).
+ * We opt into React Router's upcoming v7 behaviors now (`future.v7_startTransition` and `future.v7_relativeSplatPath`).
  * This keeps our runtime aligned with the next major release, removes the warnings the test suite surfaced, and
  * ensures we catch any issues with React deferring renders or splat route resolution changes earlier in development.
  */
