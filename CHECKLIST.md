@@ -1,11 +1,9 @@
 # Build Checklist
 
 ## Active
-- [ ] _(select next active item)_
+- [ ] Define initial database schema for teams, players, and substitutions
 
 ## Planned
-- [ ] Review error logging for the login screen. Ensure that in dev mode error reporting is verbose
-- [ ] Define initial database schema for teams, players, and substitutions
 - [ ] Add TanStack Query hooks for core data operations
 - [ ] Build roster management MVP (list, add, substitute players)
 - [ ] Configure deployment target (Vercel or Netlify) with env vars
@@ -13,6 +11,11 @@
 - [ ] Extract shared Supabase test utilities (mock factories, env stubbing) to `src/test/` so upcoming feature tests reuse the patterns without duplicating setup.
 
 ## Completed
+- [x] Add logout flow test ensuring `supabase.auth.signOut` clears session
+- [x] Add SupabaseAuthProvider session-restoration test covering `getSession`
+- [x] Add LoginForm unauthorized-email test capturing allowlist enforcement messaging
+- [x] Add LoginForm happy-path test to assert success UI after `signInWithOtp`
+- [x] Enable Supabase magic-link login flow end-to-end (env vars, allowlist, smoke test)
 - [x] Review error logging for the login screen. Ensure that in dev mode error reporting is verbose
 - [x] Ensure unmatched routes render the branded error boundary
 - [x] Guard Supabase test storage key generation when crypto is unavailable
