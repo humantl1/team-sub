@@ -5,14 +5,47 @@
  */
 import { NavLink, Outlet } from 'react-router-dom'
 import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider'
+import { SupabaseConfigurationError } from '@/app/errors/SupabaseConfigurationError'
+
+/**
+ * Constants describing the HTTP response we throw when Supabase fails to bootstrap. Grouping them at
+ * the top keeps the magic numbers out of the control flow and makes downstream tests easier to read.
+ */
+const SUPABASE_BOOTSTRAP_ERROR_STATUS = 500
+const SUPABASE_BOOTSTRAP_STATUS_TEXT = 'Supabase configuration error'
 
 export function RootLayout() {
   /**
    * Reading auth state here lets the top navigation reflect the current user (email + sign-out button)
    * while still rendering immediately during the initial loading phase.
    */
-  const { session, isLoading, signOut } = useSupabaseAuth()
+  const { client: supabaseClient, error: authError, session, isLoading, signOut } = useSupabaseAuth()
   const userEmail = session?.user.email ?? null
+
+  if (supabaseClient === null && authError) {
+    /**
+     * When the Supabase client is missing (usually because env vars are undefined) the entire app is
+     * unusable. Throwing a router-style response here funnels control into `AppErrorBoundary`, which
+     * shows the full-screen error treatment instead of a disabled login form. Developers still see the
+     * detailed config guidance via the boundary's diagnostics panel in development builds.
+     */
+    throw new SupabaseConfigurationError(authError, {
+      status: SUPABASE_BOOTSTRAP_ERROR_STATUS,
+      statusText: SUPABASE_BOOTSTRAP_STATUS_TEXT,
+    })
+  }
+
+  if (supabaseClient === null) {
+    /**
+     * Defensive fallback: if the client vanished without an explicit error message we still escalate
+     * to the boundary so users do not interact with partial UI states. This condition should be rare,
+     * but keeping the guard avoids silent failures when integration tests mock the provider.
+     */
+    throw new SupabaseConfigurationError('Supabase client unavailable.', {
+      status: SUPABASE_BOOTSTRAP_ERROR_STATUS,
+      statusText: SUPABASE_BOOTSTRAP_STATUS_TEXT,
+    })
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
