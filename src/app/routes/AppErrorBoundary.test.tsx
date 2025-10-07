@@ -26,8 +26,8 @@ describe('AppErrorBoundary', () => {
 
     await waitFor(() => expect(screen.getByText(/Error 404/i)).toBeInTheDocument())
     expect(screen.getByRole('heading', { name: /404/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /return to dashboard/i })).toBeInTheDocument()
     expect(screen.getByText('Not found')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /return to dashboard/i })).toBeInTheDocument()
   })
 
   it('shows developer diagnostics in development mode when an element throws', async () => {
@@ -43,6 +43,7 @@ describe('AppErrorBoundary', () => {
       },
     ])
 
+    // The error message appears twice: once in the main error message and once in the developer diagnostics section.
     await waitFor(() => expect(screen.getAllByText(/Kaboom from element render/)).toHaveLength(2))
     expect(screen.getByRole('button', { name: /reload page/i })).toBeInTheDocument()
   })
