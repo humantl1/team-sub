@@ -4,6 +4,7 @@
 - [ ] _(select next active item)_
 
 ## Planned
+- [ ] Revise error logging so that it is clear the user cannot continue. Ensure that in dev mode error reporting is verbose
 - [ ] Define initial database schema for teams, players, and substitutions
 - [ ] Add TanStack Query hooks for core data operations
 - [ ] Build roster management MVP (list, add, substitute players)
