@@ -82,3 +82,19 @@
 - Defensive guards in providers keep the SPA debuggable even when setup is incomplete; prefer resilient fallbacks over throwing errors in render.
 - Pair UI polish tasks with targeted regression tests so future routing changes don’t resurrect framework defaults.
 - When asserting error copy in tests, remember that developer diagnostics may render in multiple locations—account for that in queries to avoid brittle expectations.
+
+# Post Mortem: Login form misconfiguration guard duplication
+
+## Issues Encountered
+
+### Duplicate error messaging when Supabase initialization fails
+- The first guard implementation set the login form’s local status to `error` even when the shared provider already surfaced the configuration problem.
+- Because the form also renders the provider banner, the screen showed the same message twice, confusing the visual feedback we intended for misconfigured environments.
+
+## Resolution
+- Adjusted the early-return branch so the component keeps its local status at `idle` and clears any feedback message. The UI now relies solely on the provider banner when the client is unavailable while still blocking submission attempts.
+- Re-ran the test suite to confirm the UX stays intact and the regression tests cover the scenario.
+
+## Lessons Learned / Action Items
+- When reusing provider-sourced errors in local components, avoid layering duplicate states unless the UX explicitly calls for redundancy.
+- Favor testing the rendered UI after changes to shared context contracts; small state tweaks can ripple into surprising visual regressions even when logic seems straightforward.

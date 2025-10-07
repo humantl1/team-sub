@@ -9,10 +9,11 @@
 - [ ] Build roster management MVP (list, add, substitute players)
 - [ ] Configure deployment target (Vercel or Netlify) with env vars
 - [ ] Set up CI workflow running `pnpm check`
-- [ ] Resolve Vitest GoTrue multiple-client warning by tightening Supabase test setup
 - [ ] Extract shared Supabase test utilities (mock factories, env stubbing) to `src/test/` so upcoming feature tests reuse the patterns without duplicating setup.
 
 ## Completed
+- [x] Guard Supabase test storage key generation when crypto is unavailable
+- [x] Restore Supabase login guard and Vitest GoTrue warning fixes
 - [x] Prevent `LoginForm` from instantiating the Supabase client when the provider reported an initialization error so env misconfigurations show the intended UI guidance instead of triggering the global error boundary.
 - [x] Review recent Supabase and error boundary changes
 - [x] Investigate blank screen when running `pnpm dev`

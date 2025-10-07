@@ -48,6 +48,11 @@ Active players will appear in an interactive list
 - When introducing cross-cutting providers, update foundational smoke tests immediately—they act as the canary for route guards and global wiring.
 - Supabase client access should always be wrapped in easily mockable helpers; otherwise, tests will keep tripping over env requirements.
 
+
+# Code Reviews
+- Do not directly edit code
+- Suggest code revisions as comments
+
 ---
 
 ## 0) TL;DR Stack

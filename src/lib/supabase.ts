@@ -35,6 +35,21 @@ export function createSupabaseClientFromEnv(env: SupabaseEnv): SupabaseClient {
     );
   }
 
+  const isTestEnv = import.meta.env.MODE === "test";
+  /**
+   * Generate a deterministic storage key during Vitest runs so GoTrue does not complain about
+   * multiple clients sharing the same underlying storage. Older runtimes (or certain jsdom
+   * versions) omit the Web Crypto API, so we defensively fall back to `Math.random` when
+   * `crypto.randomUUID` is unavailable instead of throwing a `ReferenceError`.
+   */
+  const storageKeyForTests = isTestEnv
+    ? `sb-test-${
+        typeof globalThis.crypto?.randomUUID === "function"
+          ? globalThis.crypto.randomUUID()
+          : Math.random().toString(36).slice(2)
+      }`
+    : undefined;
+
   return createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       /**
@@ -43,6 +58,12 @@ export function createSupabaseClientFromEnv(env: SupabaseEnv): SupabaseClient {
        */
       persistSession: true,
       autoRefreshToken: true,
+      /**
+       * Vitest executes all suites within a single jsdom instance. Generating a unique storage key
+       * during test runs prevents Supabase's GoTrue client from emitting "multiple client" warnings
+       * when helpers (or the app) create more than one client in the same browser context.
+       */
+      ...(storageKeyForTests ? { storageKey: storageKeyForTests } : {}),
     },
   });
 }
