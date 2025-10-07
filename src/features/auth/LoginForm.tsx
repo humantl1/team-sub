@@ -31,21 +31,20 @@ export function LoginForm() {
       return
     }
 
-    setStatus('loading')
-    setFeedbackMessage(null)
-
     if (!supabase) {
       /**
        * When the Supabase client failed to initialize (usually missing env vars), we bail out early so
        * the UI can rely on the provider's error message instead of triggering the global error boundary.
+       * We intentionally leave the local status in its idle state so the screen renders a single copy
+       * of the guidance coming from `SupabaseAuthProvider`.
        */
-      setStatus('error')
-      setFeedbackMessage(
-        sessionError ??
-          'Supabase is unavailable right now. Double-check the environment variables and try again.',
-      )
+      setStatus('idle')
+      setFeedbackMessage(null)
       return
     }
+
+    setStatus('loading')
+    setFeedbackMessage(null)
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
