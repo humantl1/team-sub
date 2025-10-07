@@ -10,6 +10,7 @@ import {
   useRouteError,
 } from 'react-router-dom'
 import { useMemo } from 'react'
+import { SupabaseConfigurationError } from '@/app/errors/SupabaseConfigurationError'
 
 /**
  * Helper describing the bits of information we want to extract from whatever React Router hands us.
@@ -69,6 +70,17 @@ export function AppErrorBoundary() {
           'Sorry about that! The page had trouble loading. Try again or head back to the dashboard.',
         developerMessage: shortMessage,
         stackTrace: null,
+      }
+    }
+
+    if (routeError instanceof SupabaseConfigurationError) {
+      return {
+        code: routeError.status,
+        title: `${routeError.status} — ${routeError.statusText}`,
+        description:
+          'Supabase could not initialize because configuration values are missing. Update the environment variables and reload the app.',
+        developerMessage: routeError.message,
+        stackTrace: routeError.stack ?? null,
       }
     }
 

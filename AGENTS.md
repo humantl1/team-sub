@@ -52,6 +52,10 @@ Active players will appear in an interactive list
 # Code Reviews
 - Do not directly edit code
 - Suggest code revisions as comments
+- Ensure changes follow best language best practices
+- Ensure changes follow tool best practices
+- Ensure changes follow web development best practices
+- Ensure changes respect a dynamic UI for mobile, tablet, or pc
 
 ---
 

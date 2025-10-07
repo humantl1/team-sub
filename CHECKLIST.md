@@ -4,7 +4,7 @@
 - [ ] _(select next active item)_
 
 ## Planned
-- [ ] Revise error logging so that it is clear the user cannot continue. Ensure that in dev mode error reporting is verbose
+- [ ] Review error logging for the login screen. Ensure that in dev mode error reporting is verbose
 - [ ] Define initial database schema for teams, players, and substitutions
 - [ ] Add TanStack Query hooks for core data operations
 - [ ] Build roster management MVP (list, add, substitute players)
@@ -13,6 +13,7 @@
 - [ ] Extract shared Supabase test utilities (mock factories, env stubbing) to `src/test/` so upcoming feature tests reuse the patterns without duplicating setup.
 
 ## Completed
+- [x] Review error logging for the login screen. Ensure that in dev mode error reporting is verbose
 - [x] Ensure unmatched routes render the branded error boundary
 - [x] Guard Supabase test storage key generation when crypto is unavailable
 - [x] Restore Supabase login guard and Vitest GoTrue warning fixes
