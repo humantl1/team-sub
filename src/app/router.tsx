@@ -23,6 +23,18 @@ export const routes = [
         children: [{ index: true, element: <HomeRoute /> }],
       },
       { path: 'login', element: <LoginRoute /> },
+      {
+        path: '*',
+        element: null,
+        loader: () => {
+          /**
+           * React Router surfaces unmatched URLs by letting the innermost route throw. We raise a 404-style
+           * response so our branded `AppErrorBoundary` renders instead of leaving the login screen stuck in a
+           * loading state when someone mistypes a link or visits a stale bookmark.
+           */
+          throw new Response('Route not found', { status: 404, statusText: 'Not Found' })
+        },
+      },
     ],
   },
 ]

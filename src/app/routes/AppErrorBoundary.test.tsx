@@ -6,8 +6,21 @@ import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { AppErrorBoundary } from './AppErrorBoundary'
 
-function renderRouterWithError(routerConfig: Parameters<typeof createMemoryRouter>[0]) {
-  const router = createMemoryRouter(routerConfig, { initialEntries: ['/'] })
+interface RenderRouterOptions {
+  initialEntries?: string[]
+}
+
+function renderRouterWithError(
+  routerConfig: Parameters<typeof createMemoryRouter>[0],
+  options: RenderRouterOptions = {},
+) {
+  /**
+   * Tests can override the initial history stack so we can simulate navigating to `/missing` without
+   * rendering the entire application router. Defaulting to `/` keeps existing tests unchanged.
+   */
+  const router = createMemoryRouter(routerConfig, {
+    initialEntries: options.initialEntries ?? ['/'],
+  })
   return render(<RouterProvider router={router} />)
 }
 
@@ -46,5 +59,38 @@ describe('AppErrorBoundary', () => {
     // The error message appears twice: once in the main error message and once in the developer diagnostics section.
     await waitFor(() => expect(screen.getAllByText(/Kaboom from element render/)).toHaveLength(2))
     expect(screen.getByRole('button', { name: /reload page/i })).toBeInTheDocument()
+  })
+
+  it('renders the branded 404 UI when navigation targets an unknown path', async () => {
+    /**
+     * This config mirrors the structure of our production router: the root layout owns the error boundary and
+     * child routes define the actual pages. We intentionally include only the index route so navigating to
+     * `/missing` hits the catch-all loader and funnels into the boundary.
+     */
+    renderRouterWithError(
+      [
+        {
+          path: '/',
+          element: <div>root shell should not render for missing routes</div>,
+          errorElement: <AppErrorBoundary />,
+          children: [
+            { index: true, element: <div>home</div> },
+            {
+              path: '*',
+              element: <></>,
+              loader: () => {
+                throw new Response('Route not found', { status: 404, statusText: 'Not Found' })
+              },
+            },
+          ],
+        },
+      ],
+      { initialEntries: ['/missing'] },
+    )
+
+    await waitFor(() => expect(screen.getByText(/Error 404/i)).toBeInTheDocument())
+    expect(screen.getByRole('heading', { name: /404/i })).toBeInTheDocument()
+    expect(screen.getByText('Route not found')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /return to dashboard/i })).toBeInTheDocument()
   })
 })
