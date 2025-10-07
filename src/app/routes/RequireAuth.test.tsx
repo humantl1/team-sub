@@ -16,7 +16,7 @@ const mockedUseSupabaseAuth = vi.mocked(useSupabaseAuth)
 
 const ROUTER_FUTURE_FLAGS = {
   /**
-   * Enabling the v7 behaviours keeps test routers aligned with the production instance so warnings stay hidden and we rehearse the next major release early.
+   * Enabling the v7 behaviors keeps test routers aligned with the production instance so warnings stay hidden and we rehearse the next major release early.
    */
   v7_startTransition: true,
   v7_relativeSplatPath: true,
