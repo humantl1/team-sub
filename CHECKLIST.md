@@ -13,6 +13,8 @@
 - [ ] Extract shared Supabase test utilities (mock factories, env stubbing) to `src/test/` so upcoming feature tests reuse the patterns without duplicating setup.
 
 ## Completed
+- [x] Investigate blank screen when running `pnpm dev`
+- [x] Introduce a custom router error boundary so runtime failures render a project-branded fallback instead of React Router's default developer message.
 - [x] Implement authentication flow with magic links and session context
 - [x] Initialize Supabase project configuration and env management
 - [x] Create base app shell with routing, providers, and layout

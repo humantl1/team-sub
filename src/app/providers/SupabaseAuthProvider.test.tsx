@@ -40,6 +40,21 @@ afterEach(() => {
 })
 
 describe('SupabaseAuthProvider', () => {
+  it('surfaces initialization errors when Supabase env vars are missing', async () => {
+    const envError = new Error('VITE_SUPABASE_URL is not defined')
+    mockGetSupabaseClient.mockImplementation(() => {
+      throw envError
+    })
+
+    render(
+      <SupabaseAuthProvider>
+        <Consumer />
+      </SupabaseAuthProvider>,
+    )
+
+    await waitFor(() => expect(screen.getByText(envError.message)).toBeInTheDocument())
+  })
+
   it('skips unsubscribe when the auth listener fails to initialize', async () => {
     const listenerError = new Error('listener failed')
 
