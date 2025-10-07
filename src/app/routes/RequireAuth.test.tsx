@@ -21,6 +21,7 @@ describe('RequireAuth', () => {
 
   it('shows a loading indicator while the session lookup is in flight', () => {
     mockedUseSupabaseAuth.mockReturnValue({
+      client: null,
       session: null,
       isLoading: true,
       error: null,
@@ -38,6 +39,7 @@ describe('RequireAuth', () => {
 
   it('redirects unauthenticated visitors to the login route', async () => {
     mockedUseSupabaseAuth.mockReturnValue({
+      client: null,
       session: null,
       isLoading: false,
       error: null,
@@ -65,6 +67,7 @@ describe('RequireAuth', () => {
 
   it('renders protected content when a session exists', async () => {
     mockedUseSupabaseAuth.mockReturnValue({
+      client: null,
       session: { user: { email: 'coach@example.com' } } as Session,
       isLoading: false,
       error: null,

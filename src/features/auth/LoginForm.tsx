@@ -3,8 +3,7 @@
  * This component intentionally lives in `features/auth` so it can grow alongside future
  * passwordless UX improvements (resend flows, allowlisted messaging, etc.).
  */
-import { FormEvent, useMemo, useState } from 'react'
-import { getSupabaseClient } from '@/lib/supabase'
+import { FormEvent, useState } from 'react'
 import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider'
 
 type SubmissionState = 'idle' | 'loading' | 'sent' | 'error'
@@ -14,8 +13,11 @@ export function LoginForm() {
    * Reading the shared auth context lets the form surface any bootstrap errors (e.g. bad env vars)
    * while reusing the session loading indicator so UI states stay consistent across the app.
    */
-  const { isLoading: isSessionLoading, error: sessionError } = useSupabaseAuth()
-  const supabase = useMemo(() => getSupabaseClient(), [])
+  const {
+    client: supabase,
+    isLoading: isSessionLoading,
+    error: sessionError,
+  } = useSupabaseAuth()
 
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<SubmissionState>('idle')
@@ -31,6 +33,19 @@ export function LoginForm() {
 
     setStatus('loading')
     setFeedbackMessage(null)
+
+    if (!supabase) {
+      /**
+       * When the Supabase client failed to initialize (usually missing env vars), we bail out early so
+       * the UI can rely on the provider's error message instead of triggering the global error boundary.
+       */
+      setStatus('error')
+      setFeedbackMessage(
+        sessionError ??
+          'Supabase is unavailable right now. Double-check the environment variables and try again.',
+      )
+      return
+    }
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -53,7 +68,7 @@ export function LoginForm() {
   }
 
   const isSubmitting = status === 'loading'
-  const disableForm = isSubmitting || isSessionLoading
+  const disableForm = isSubmitting || isSessionLoading || supabase === null
 
   return (
     <form

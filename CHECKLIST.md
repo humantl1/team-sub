@@ -13,6 +13,8 @@
 - [ ] Extract shared Supabase test utilities (mock factories, env stubbing) to `src/test/` so upcoming feature tests reuse the patterns without duplicating setup.
 
 ## Completed
+- [x] Prevent `LoginForm` from instantiating the Supabase client when the provider reported an initialization error so env misconfigurations show the intended UI guidance instead of triggering the global error boundary.
+- [x] Review recent Supabase and error boundary changes
 - [x] Investigate blank screen when running `pnpm dev`
 - [x] Introduce a custom router error boundary so runtime failures render a project-branded fallback instead of React Router's default developer message.
 - [x] Implement authentication flow with magic links and session context

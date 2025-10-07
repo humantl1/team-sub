@@ -7,18 +7,12 @@ import { vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { LoginForm } from './LoginForm'
 import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider'
-import { getSupabaseClient } from '@/lib/supabase'
 
 vi.mock('@/app/providers/SupabaseAuthProvider', () => ({
   useSupabaseAuth: vi.fn(),
 }))
 
-vi.mock('@/lib/supabase', () => ({
-  getSupabaseClient: vi.fn(),
-}))
-
 const mockedUseSupabaseAuth = vi.mocked(useSupabaseAuth)
-const mockedGetSupabaseClient = vi.mocked(getSupabaseClient)
 
 function createSupabaseSignInMock() {
   return {
@@ -28,18 +22,21 @@ function createSupabaseSignInMock() {
   }
 }
 
+function buildAuthContext(overrides: Partial<ReturnType<typeof useSupabaseAuth>> = {}) {
+  const supabase = createSupabaseSignInMock() as unknown as SupabaseClient
+  return {
+    client: supabase,
+    session: null,
+    isLoading: false,
+    error: null,
+    signOut: vi.fn(),
+    ...overrides,
+  }
+}
+
 describe('LoginForm', () => {
   beforeEach(() => {
-    mockedUseSupabaseAuth.mockReturnValue({
-      session: null,
-      isLoading: false,
-      error: null,
-      signOut: vi.fn(),
-    })
-
-    mockedGetSupabaseClient.mockReturnValue(
-      createSupabaseSignInMock() as unknown as SupabaseClient,
-    )
+    mockedUseSupabaseAuth.mockReturnValue(buildAuthContext())
   })
 
   afterEach(() => {
@@ -55,8 +52,9 @@ describe('LoginForm', () => {
   })
 
   it('sends a magic link and shows confirmation when Supabase succeeds', async () => {
-    const supabase = createSupabaseSignInMock()
-    mockedGetSupabaseClient.mockReturnValue(supabase as unknown as SupabaseClient)
+    const authContext = buildAuthContext()
+    mockedUseSupabaseAuth.mockReturnValue(authContext)
+    const supabase = authContext.client!
 
     render(<LoginForm />)
 
@@ -76,12 +74,12 @@ describe('LoginForm', () => {
   })
 
   it('surfaces Supabase errors to the user', async () => {
-    const supabase = createSupabaseSignInMock()
-    supabase.auth.signInWithOtp.mockResolvedValue({
+    const authContext = buildAuthContext()
+    authContext.client!.auth.signInWithOtp.mockResolvedValue({
       data: null,
       error: { message: 'Allowlist required.' },
     })
-    mockedGetSupabaseClient.mockReturnValue(supabase as unknown as SupabaseClient)
+    mockedUseSupabaseAuth.mockReturnValue(authContext)
 
     render(<LoginForm />)
 
@@ -90,8 +88,21 @@ describe('LoginForm', () => {
     })
     fireEvent.submit(screen.getByRole('button', { name: /send magic link/i }).closest('form')!)
 
-    await waitFor(() => expect(supabase.auth.signInWithOtp).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(authContext.client!.auth.signInWithOtp).toHaveBeenCalledTimes(1))
 
     expect(screen.getByText(/allowlist required/i)).toBeInTheDocument()
+  })
+
+  it('disables submissions and surfaces the provider error when the Supabase client is unavailable', () => {
+    mockedUseSupabaseAuth.mockReturnValue(
+      buildAuthContext({ client: null, error: 'VITE_SUPABASE_URL is not defined.' }),
+    )
+
+    render(<LoginForm />)
+
+    const submitButton = screen.getByRole('button', { name: /send magic link/i })
+
+    expect(submitButton).toBeDisabled()
+    expect(screen.getByText(/VITE_SUPABASE_URL is not defined/i)).toBeInTheDocument()
   })
 })

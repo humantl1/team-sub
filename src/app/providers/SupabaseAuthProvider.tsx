@@ -21,6 +21,12 @@ import { getSupabaseClient } from '@/lib/supabase'
  * appropriate fallbacks while the initial session check resolves.
  */
 export interface SupabaseAuthContextValue {
+  /**
+   * The memoized Supabase client instance. This is `null` when environment variables are missing or
+   * the client failed to bootstrap, allowing consumers (like the login form) to short-circuit their
+   * interactions instead of crashing.
+   */
+  client: SupabaseClient | null
   session: Session | null
   isLoading: boolean
   error: string | null
@@ -141,6 +147,7 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
   }, [supabase])
 
   const value: SupabaseAuthContextValue = {
+    client: supabase,
     session,
     isLoading,
     error,
