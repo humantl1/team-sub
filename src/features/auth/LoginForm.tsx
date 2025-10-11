@@ -1,7 +1,7 @@
 /**
  * Magic link login form powered by Supabase.
  * This component intentionally lives in `features/auth` so it can grow alongside future
- * passwordless UX improvements (resend flows, allowlisted messaging, etc.).
+ * passwordless UX improvements (resend flows, friendly error messaging, etc.).
  */
 import { FormEvent, useState } from 'react'
 import { useSupabaseAuth } from '@/app/providers/SupabaseAuthProvider'

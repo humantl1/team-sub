@@ -1,14 +1,17 @@
 # Build Checklist
 
 ## Active
-- [ ] Define initial database schema for teams, players, and substitutions
+- [ ] Add TanStack Query hooks for core data operations
 
 ## Planned
-- [ ] Add TanStack Query hooks for core data operations
 - [ ] Build roster management MVP (list, add, substitute players)
 - [ ] Configure deployment target (Vercel or Netlify) with env vars
 - [ ] Set up CI workflow running `pnpm check`
 - [ ] Extract shared Supabase test utilities (mock factories, env stubbing) to `src/test/` so upcoming feature tests reuse the patterns without duplicating setup.
+- [ ] Upsert `app_users` profile rows immediately after Supabase authentication so RLS policies resolve the owner id
+- [ ] Generate Supabase TypeScript types and adopt them inside the client helper
+- [ ] Document the approved database schema in README or a dedicated schema doc for future contributors
+- [ ] Clone default positions when a team is created and expose a "reset to defaults" control
 
 ## Completed
 - [x] Add logout flow test ensuring `supabase.auth.signOut` clears session
@@ -38,6 +41,8 @@
 - [x] Validate Vitest suite health (`pnpm test -- --run`) and document any harness quirks
 - [x] Add ESLint, Prettier, and jsx-a11y tooling
 - [x] Configure strict TypeScript compiler options (`tsconfig.json`)
+- [x] Review AGENTS.md tech design items and flag completed ones for cleanup
+- [x] Remove MARK FOR DELETE sections from AGENTS.md now that they’re confirmed done
 - [x] Reviewed AGENTS.md and captured project constraints
 - [x] Created project `.gitignore` covering Node/Vite/Supabase artifacts
 - [x] Set up Vitest + Testing Library environment
