@@ -77,7 +77,7 @@ describe('LoginForm', () => {
     const authContext = buildAuthContext()
     authContext.client!.auth.signInWithOtp.mockResolvedValue({
       data: null,
-      error: { message: 'Allowlist required.' },
+      error: { message: 'Unexpected Supabase error.' },
     })
     mockedUseSupabaseAuth.mockReturnValue(authContext)
 
@@ -90,7 +90,7 @@ describe('LoginForm', () => {
 
     await waitFor(() => expect(authContext.client!.auth.signInWithOtp).toHaveBeenCalledTimes(1))
 
-    expect(screen.getByText(/allowlist required/i)).toBeInTheDocument()
+    expect(screen.getByText(/unexpected supabase error/i)).toBeInTheDocument()
   })
 
   it('disables submissions and surfaces the provider error when the Supabase client is unavailable', () => {
