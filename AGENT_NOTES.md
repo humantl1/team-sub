@@ -11,6 +11,7 @@
 - Built the base application shell: added React Router with a root layout, QueryClient-powered provider stack, placeholder login route, and updated tests; installed `react-router-dom` and `@tanstack/react-query` to support the new wiring.
 - Documented the Supabase schema: added ER diagram (`docs/schema-diagram.md`) and execution/playbook updates (`docs/supabase-schema.md`) covering the new view and permissions tweaks.
 - Captured the Supabase CLI + Docker workflow: documented login/link prerequisites, added the dump/diff cadence to `AGENTS.md`, and updated the checklist so schema sync stays in lockstep with Supabase.
+- Tightened roster/substitution RLS policies to enforce same-team player alignment and annotated the SQL so future edits keep the guard intact.
 
 ## Suggested Next Steps
 1. Upsert `app_users` profile rows immediately after Supabase authentication so RLS policies resolve the owner id.

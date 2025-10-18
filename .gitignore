@@ -40,6 +40,7 @@ coverage/
 
 # Supabase local state
 .supabase/
+supabase/.temp/
 
 # MacOS
 .DS_Store
