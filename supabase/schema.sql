@@ -568,13 +568,11 @@ CREATE POLICY "roster_slots_delete_owned" ON "public"."game_roster_slots" FOR DE
 
 
 
-CREATE POLICY "roster_slots_insert_owned" ON "public"."game_roster_slots" FOR INSERT WITH CHECK ((("game_id" IN ( SELECT "g"."id"
-   FROM ("public"."games" "g"
+CREATE POLICY "roster_slots_insert_owned" ON "public"."game_roster_slots" FOR INSERT WITH CHECK (((EXISTS ( SELECT 1
+   FROM (("public"."games" "g"
      JOIN "public"."teams" "t" ON (("t"."id" = "g"."team_id")))
-  WHERE ("t"."owner_id" = "public"."app_current_user_id"()))) AND ("player_id" IN ( SELECT "p"."id"
-   FROM ("public"."players" "p"
-     JOIN "public"."teams" "t" ON (("t"."id" = "p"."team_id")))
-  WHERE ("t"."owner_id" = "public"."app_current_user_id"()))) AND (("position_id" IS NULL) OR ("position_id" IN ( SELECT "positions"."id"
+     JOIN "public"."players" "p" ON (("p"."id" = "game_roster_slots"."player_id")))
+  WHERE (("g"."id" = "game_roster_slots"."game_id") AND ("p"."team_id" = "g"."team_id") AND ("t"."owner_id" = "public"."app_current_user_id"())))) AND (("position_id" IS NULL) OR ("position_id" IN ( SELECT "positions"."id"
    FROM "public"."positions"
   WHERE (("positions"."owner_id" IS NULL) OR ("positions"."owner_id" = "public"."app_current_user_id"())))))));
 
@@ -593,10 +591,11 @@ CREATE POLICY "roster_slots_update_owned" ON "public"."game_roster_slots" FOR UP
   WHERE ("t"."owner_id" = "public"."app_current_user_id"())))) WITH CHECK ((("game_id" IN ( SELECT "g"."id"
    FROM ("public"."games" "g"
      JOIN "public"."teams" "t" ON (("t"."id" = "g"."team_id")))
-  WHERE ("t"."owner_id" = "public"."app_current_user_id"()))) AND ("player_id" IN ( SELECT "p"."id"
-   FROM ("public"."players" "p"
-     JOIN "public"."teams" "t" ON (("t"."id" = "p"."team_id")))
-  WHERE ("t"."owner_id" = "public"."app_current_user_id"()))) AND (("position_id" IS NULL) OR ("position_id" IN ( SELECT "positions"."id"
+  WHERE ("t"."owner_id" = "public"."app_current_user_id"()))) AND (EXISTS ( SELECT 1
+   FROM (("public"."games" "g"
+     JOIN "public"."teams" "t" ON (("t"."id" = "g"."team_id")))
+     JOIN "public"."players" "p" ON (("p"."id" = "game_roster_slots"."player_id")))
+  WHERE (("g"."id" = "game_roster_slots"."game_id") AND ("p"."team_id" = "g"."team_id") AND ("t"."owner_id" = "public"."app_current_user_id"())))) AND (("position_id" IS NULL) OR ("position_id" IN ( SELECT "positions"."id"
    FROM "public"."positions"
   WHERE (("positions"."owner_id" IS NULL) OR ("positions"."owner_id" = "public"."app_current_user_id"())))))));
 
@@ -619,16 +618,16 @@ CREATE POLICY "substitutions_delete_owned" ON "public"."substitutions" FOR DELET
 
 
 
-CREATE POLICY "substitutions_insert_owned" ON "public"."substitutions" FOR INSERT WITH CHECK ((("game_id" IN ( SELECT "g"."id"
+CREATE POLICY "substitutions_insert_owned" ON "public"."substitutions" FOR INSERT WITH CHECK (((EXISTS ( SELECT 1
    FROM ("public"."games" "g"
      JOIN "public"."teams" "t" ON (("t"."id" = "g"."team_id")))
-  WHERE ("t"."owner_id" = "public"."app_current_user_id"()))) AND (("player_in_id" IS NULL) OR ("player_in_id" IN ( SELECT "p"."id"
+  WHERE (("g"."id" = "substitutions"."game_id") AND ("t"."owner_id" = "public"."app_current_user_id"())))) AND (("player_in_id" IS NULL) OR (EXISTS ( SELECT 1
    FROM ("public"."players" "p"
-     JOIN "public"."teams" "t" ON (("t"."id" = "p"."team_id")))
-  WHERE ("t"."owner_id" = "public"."app_current_user_id"())))) AND (("player_out_id" IS NULL) OR ("player_out_id" IN ( SELECT "p"."id"
+     JOIN "public"."games" "g" ON (("g"."id" = "substitutions"."game_id")))
+  WHERE (("p"."id" = "substitutions"."player_in_id") AND ("p"."team_id" = "g"."team_id"))))) AND (("player_out_id" IS NULL) OR (EXISTS ( SELECT 1
    FROM ("public"."players" "p"
-     JOIN "public"."teams" "t" ON (("t"."id" = "p"."team_id")))
-  WHERE ("t"."owner_id" = "public"."app_current_user_id"()))))));
+     JOIN "public"."games" "g" ON (("g"."id" = "substitutions"."game_id")))
+  WHERE (("p"."id" = "substitutions"."player_out_id") AND ("p"."team_id" = "g"."team_id")))))));
 
 
 
@@ -645,13 +644,13 @@ CREATE POLICY "substitutions_update_owned" ON "public"."substitutions" FOR UPDAT
   WHERE ("t"."owner_id" = "public"."app_current_user_id"())))) WITH CHECK ((("game_id" IN ( SELECT "g"."id"
    FROM ("public"."games" "g"
      JOIN "public"."teams" "t" ON (("t"."id" = "g"."team_id")))
-  WHERE ("t"."owner_id" = "public"."app_current_user_id"()))) AND (("player_in_id" IS NULL) OR ("player_in_id" IN ( SELECT "p"."id"
+  WHERE ("t"."owner_id" = "public"."app_current_user_id"()))) AND (("player_in_id" IS NULL) OR (EXISTS ( SELECT 1
    FROM ("public"."players" "p"
-     JOIN "public"."teams" "t" ON (("t"."id" = "p"."team_id")))
-  WHERE ("t"."owner_id" = "public"."app_current_user_id"())))) AND (("player_out_id" IS NULL) OR ("player_out_id" IN ( SELECT "p"."id"
+     JOIN "public"."games" "g" ON (("g"."id" = "substitutions"."game_id")))
+  WHERE (("p"."id" = "substitutions"."player_in_id") AND ("p"."team_id" = "g"."team_id"))))) AND (("player_out_id" IS NULL) OR (EXISTS ( SELECT 1
    FROM ("public"."players" "p"
-     JOIN "public"."teams" "t" ON (("t"."id" = "p"."team_id")))
-  WHERE ("t"."owner_id" = "public"."app_current_user_id"()))))));
+     JOIN "public"."games" "g" ON (("g"."id" = "substitutions"."game_id")))
+  WHERE (("p"."id" = "substitutions"."player_out_id") AND ("p"."team_id" = "g"."team_id")))))));
 
 
 
