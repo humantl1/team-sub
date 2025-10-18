@@ -150,3 +150,30 @@
 ## Lessons Learned / Action Items
 - When reaching for additional Testing Library helpers, double-check whether the dependency is part of the current toolchain before adopting it; prefer the existing primitives when they meet the need.
 - Annotate checklist items once covered to prevent future rediscovery work—especially when the checklist mixes real gaps with verification tasks.
+
+# Post Mortem: Supabase schema rollout & allowlist cleanup (2025-02-15)
+
+## Issues Encountered
+
+### View creation run mixed with parameterized SQL
+- While applying the `positions_with_sport` view, the Supabase SQL editor still held example statements containing `:owner_id` placeholders, leading to a syntax error that initially looked like a view problem.
+- Resolved by re-running only the view DDL; documented the clean snippet in `docs/supabase-schema.md` to prevent future copy/paste mistakes.
+
+### Supabase marked the new view as “Unrestricted”
+- Supabase flagged the view because views default to creator privileges, tripping the dashboard warning even though base tables have RLS.
+- Added explicit `revoke`/`grant` guidance and enabled `security_invoker` so the view executes with caller permissions while keeping authenticated access intact.
+
+### Ghost allowlist table created confusion
+- The hosted project still had an `allowed_emails` table from earlier experiments, but the repo never created or referenced it beyond a mocked error message.
+- Decided to drop the concept for now, scrubbed the code/tests/docs, and noted that true invite-only flows will need a deliberate schema/task later.
+
+## Resolutions
+- Captured the full schema (tables, RLS, view permissions) in both `supabase/schema.sql` and `docs/supabase-schema.md`, plus a Mermaid ERD for quick review before execution.
+- Updated the Supabase playbook with the privilege fix and highlighted where a GUI step is required so future runs stay reproducible.
+- Removed allowlist expectations from tests/comments/checklists to keep the codebase aligned with the simplified auth approach.
+
+## Lessons Learned / Action Items
+- Keep SQL examples that use bind-style placeholders separate from production DDL to avoid accidental copy/paste errors in the Supabase editor.
+- When adding views, always pair them with explicit privilege statements (and `security_invoker`) so Supabase’s telemetry matches our RLS posture.
+- Revisit the auth invite story intentionally—either reintroduce a first-class allowlist or document the open registration stance—before exposing roster management more broadly.
+- Next focus areas: wire TanStack Query hooks, generate Supabase types, and add flow-level tests so the new schema starts powering the app.

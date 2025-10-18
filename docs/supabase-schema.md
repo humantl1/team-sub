@@ -9,6 +9,8 @@ This document explains how to apply the schema stored in `supabase/schema.sql`, 
 4. **Run the script:** Click the *Run* button in the GUI. Supabase will create every table, index, helper function, and row-level security policy defined in the file. The script is written to be idempotent so you can re-run it safely when adding new environments.
 5. **Verify tables (GUI optional but recommended):** In the *Table Editor*, you should now see `sports`, `app_users`, `teams`, `positions`, `players`, `player_position_preferences`, `games`, `game_roster_slots`, and `substitutions`.
 
+   > **Team-alignment guard:** The RLS policies inside `supabase/schema.sql` now include `exists` checks that ensure every roster slot and substitution references players from the same team as the game. If you customize the schema later, keep those subqueries intact so multi-team coaches cannot cross-wire their data.
+
 > **CLI alternative:** If you prefer the Supabase CLI, run `supabase db remote commit --file supabase/schema.sql` (you will still need to authenticate in the terminal). The CLI path is optional; the SQL Editor flow above is usually faster during early development.
 
 ### Optional: Add read-friendly positions view

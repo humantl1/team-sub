@@ -1,7 +1,9 @@
 # Build Checklist
 
 ## Active
+- [ ] Maintain Supabase CLI schema sync after every Supabase change (`supabase db dump --schema public > supabase/schema.sql`)
 - [ ] Add TanStack Query hooks for core data operations
+- [ ] Tighten Supabase roster/substitution RLS to enforce team alignment
 
 ## Planned
 - [ ] Build roster management MVP (list, add, substitute players)
@@ -10,6 +12,8 @@
 - [ ] Extract shared Supabase test utilities (mock factories, env stubbing) to `src/test/` so upcoming feature tests reuse the patterns without duplicating setup.
 - [ ] Upsert `app_users` profile rows immediately after Supabase authentication so RLS policies resolve the owner id
 - [ ] Generate Supabase TypeScript types and adopt them inside the client helper
+- [ ] Seed baseline sports and default positions inside Supabase so new teams inherit sensible defaults
+- [ ] Extend Vitest coverage for Supabase data flows (team creation, default-position cloning, roster guards)
 - [ ] Document the approved database schema in README or a dedicated schema doc for future contributors
 - [ ] Clone default positions when a team is created and expose a "reset to defaults" control
 

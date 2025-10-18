@@ -29,6 +29,14 @@ Active players will appear in an interactive list
 - Maintain a running checklist entry when TODO comments or warnings appear in output so they do not get lost after the immediate change merges.
 - After completing a full task, ask the developer if a post mortem should be written to POST_MORTEMS.md
 
+## Supabase CLI schema sync workflow
+
+- **Immediately after linking**: run `supabase db dump --schema public > supabase/schema.sql` once so the repository baseline reflects the remote database before any new changes land.
+- **After every remote schema change**: execute `supabase db dump --schema public > supabase/schema.sql`. This overwrites the repo copy with the live schema so the agent and developer share an exact model.
+- **Health check before starting DB work**: run `supabase db diff --schema public`. An empty diff confirms there is no drift between the repo SQL and Supabase. Investigate and dump again if differences appear.
+- **Keep Supabase the source of truth**: anytime the developer runs SQL directly in the dashboard or accepts queries from the agent, immediately follow up with the dump command above. Without that step, the agent’s understanding of the schema will fall out of sync.
+- `.supabase/` stays git-ignored so access tokens and project metadata never leave the local machine. Never commit the service role key or the generated config file.
+
 # General Troubleshooting
 - Flag the need for networked installs before running pnpm
 - Pin third-party packages to stable major versions unless a beta is explicitly desired
@@ -71,6 +79,7 @@ Active players will appear in an interactive list
 - **Git hygiene**: Husky + lint-staged (fast checks on staged files)
 - **Deploy**: Vercel (static export) or Netlify; Supabase lives separately
 - **CI/CD** (optional early): GitHub Actions that run `pnpm check` (lint+test+tsc) on PRs
+- **Tooling**: Supabase CLI (schema sync, typegen) with Docker Desktop running locally (Docker for Windows/macOS is required for CLI dump/diff commands)
 
 ---
 
@@ -81,6 +90,7 @@ Active players will appear in an interactive list
 - **Node**: 20 LTS
 - **Package manager**: `pnpm` (fast), or `npm` if you prefer
 - **VS Code** update with extensions: ESLint, Prettier, Tailwind CSS IntelliSense, React TS snippets
+- **Supabase CLI + Docker Desktop**: install the Supabase CLI (`npm install -g supabase` or official installers) and ensure Docker Desktop is installed and running (Docker for Windows required on Windows machines). The CLI depends on Docker to execute `supabase db dump`/`diff` commands against the remote database.
 
 ## 3) Tooling (fast, minimal)
 
