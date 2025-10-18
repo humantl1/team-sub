@@ -9,14 +9,13 @@
 - Installed Tailwind (3.x) with PostCSS/Autoprefixer, scaffolded config files, and layered the Tailwind bundle ahead of legacy CSS inside `src/main.tsx`.
 - Replaced the smoke test with a Tailwind-aware visual assertion suite that checks key utilities, the roster layout, and accent styling (no snapshots to dodge class churn).
 - Built the base application shell: added React Router with a root layout, QueryClient-powered provider stack, placeholder login route, and updated tests; installed `react-router-dom` and `@tanstack/react-query` to support the new wiring.
+- Documented the Supabase schema: added ER diagram (`docs/schema-diagram.md`) and execution/playbook updates (`docs/supabase-schema.md`) covering the new view and permissions tweaks.
+- Captured the Supabase CLI + Docker workflow: documented login/link prerequisites, added the dump/diff cadence to `AGENTS.md`, and updated the checklist so schema sync stays in lockstep with Supabase.
 
 ## Suggested Next Steps
-1. Define the initial database schema (teams, players, substitutions) inside Supabase, pairing every table with Row Level Security policies so the anon key cannot access other users' data.
-2. Decide how to generate TypeScript types for row data (Supabase typegen vs hand-authored interfaces) once the schema exists.
-3. Start wiring TanStack Query hooks for roster/team operations once tables are in place so the UI can hydrate from real data.
-4. Map out roster-focused test scenarios (add player, reorder list, substitution flow) so coverage can grow alongside the data/API work.
-
-## Onboarding Checklist Notes
-- Confirm every new agent session reviews `AGENTS.md`, `AGENT_NOTES.md`, and `CHECKLIST.md` in that order to stay aligned with standards and in-flight work.
-- After reviewing the docs, report back to the developer with any questions or confirm readiness before picking up tasks.
-- Share the immediate plan for upcoming work once onboarding is acknowledged so prioritization stays transparent.
+1. Upsert `app_users` profile rows immediately after Supabase authentication so RLS policies resolve the owner id.
+2. Generate Supabase TypeScript types and adopt them inside the client helper once the schema stabilizes.
+3. Extend Vitest suites to cover Supabase data flows (queries/mutations, default-position cloning) using mocked clients.
+4. Wire TanStack Query hooks for teams/players/games so the UI starts consuming live data.
+5. Outline roster-focused test scenarios (add player, reorder list, substitution flow) to guide upcoming feature work.
+6. Seed baseline sports and default position records so new teams can inherit sensible defaults without manual setup.

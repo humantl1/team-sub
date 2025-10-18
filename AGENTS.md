@@ -29,6 +29,14 @@ Active players will appear in an interactive list
 - Maintain a running checklist entry when TODO comments or warnings appear in output so they do not get lost after the immediate change merges.
 - After completing a full task, ask the developer if a post mortem should be written to POST_MORTEMS.md
 
+## Supabase CLI schema sync workflow
+
+- **Immediately after linking**: run `supabase db dump --schema public > supabase/schema.sql` once so the repository baseline reflects the remote database before any new changes land.
+- **After every remote schema change**: execute `supabase db dump --schema public > supabase/schema.sql`. This overwrites the repo copy with the live schema so the agent and developer share an exact model.
+- **Health check before starting DB work**: run `supabase db diff --schema public`. An empty diff confirms there is no drift between the repo SQL and Supabase. Investigate and dump again if differences appear.
+- **Keep Supabase the source of truth**: anytime the developer runs SQL directly in the dashboard or accepts queries from the agent, immediately follow up with the dump command above. Without that step, the agent’s understanding of the schema will fall out of sync.
+- `.supabase/` stays git-ignored so access tokens and project metadata never leave the local machine. Never commit the service role key or the generated config file.
+
 # General Troubleshooting
 - Flag the need for networked installs before running pnpm
 - Pin third-party packages to stable major versions unless a beta is explicitly desired
@@ -71,6 +79,7 @@ Active players will appear in an interactive list
 - **Git hygiene**: Husky + lint-staged (fast checks on staged files)
 - **Deploy**: Vercel (static export) or Netlify; Supabase lives separately
 - **CI/CD** (optional early): GitHub Actions that run `pnpm check` (lint+test+tsc) on PRs
+- **Tooling**: Supabase CLI (schema sync, typegen) with Docker Desktop running locally (Docker for Windows/macOS is required for CLI dump/diff commands)
 
 ---
 
@@ -81,102 +90,9 @@ Active players will appear in an interactive list
 - **Node**: 20 LTS
 - **Package manager**: `pnpm` (fast), or `npm` if you prefer
 - **VS Code** update with extensions: ESLint, Prettier, Tailwind CSS IntelliSense, React TS snippets
-
-### Create project
-```bash
-# choose one package manager; examples use pnpm
-pnpm create vite@latest my-app -- --template react-ts
-cd my-app
-pnpm i
-```
-
-### Strict TypeScript
-
-`tsconfig.json` (ensure these):
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "noImplicitAny": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "noFallthroughCasesInSwitch": true,
-    "useDefineForClassFields": true,
-    "moduleResolution": "bundler",
-    "baseUrl": ".",
-    "paths": { "@/*": ["src/*"] }
-  }
-}
-```
-
----
-
-## 2) Project Structure (keep tiny & focused)
-```
-src/
-  app/               # app wiring: router, providers, layout shells
-  components/        # presentational UI pieces
-  features/          # vertical slices (budget/, games/, profile/)
-  hooks/             # reusable React hooks
-  lib/               # helpers (supabase client, query client, logger)
-  pages/             # route-level pages (if you prefer pages over features)
-  styles/            # tailwind.css and globals
-  test/              # testing setup + utilities
-```
-
-> Rule of thumb: create a **feature/** folder when a domain gets 3+ files (types, api, ui).
-
----
+- **Supabase CLI + Docker Desktop**: install the Supabase CLI (`npm install -g supabase` or official installers) and ensure Docker Desktop is installed and running (Docker for Windows required on Windows machines). The CLI depends on Docker to execute `supabase db dump`/`diff` commands against the remote database.
 
 ## 3) Tooling (fast, minimal)
-
-### ESLint + Prettier + a11y
-```bash
-pnpm add -D eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint-config-prettier prettier eslint-plugin-react-refresh eslint-plugin-jsx-a11y
-```
-
-`.eslintrc.cjs`
-```js
-module.exports = {
-  root: true,
-  parser: "@typescript-eslint/parser",
-  plugins: ["@typescript-eslint", "react-refresh", "jsx-a11y"],
-  extends: [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:jsx-a11y/recommended",
-    "eslint-config-prettier",
-  ],
-  rules: { "react-refresh/only-export-components": "warn" },
-};
-```
-
-`prettier.config.cjs`
-```js
-module.exports = { semi: true, singleQuote: false, trailingComma: "all" };
-```
-
-### Vitest + RTL
-```bash
-pnpm add -D vitest @testing-library/react @testing-library/jest-dom jsdom @vitejs/plugin-react
-```
-
-`vitest.config.ts`
-```ts
-import { defineConfig } from "vitest/config";
-import react from "@vitejs/plugin-react";
-export default defineConfig({
-  plugins: [react()],
-  test: { environment: "jsdom", setupFiles: "./src/test/setup.ts" },
-});
-```
-
-`src/test/setup.ts`
-```ts
-import "@testing-library/jest-dom";
-```
-
-> ℹ️ For Supabase-dependent tests, mock the client with a test double or use MSW.
 
 ### Git hooks (fast-only)
 ```bash
@@ -201,67 +117,6 @@ pnpm exec lint-staged
 }
 ```
 
-### Scripts
-
-`package.json`
-```json
-{
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
-    "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
-    "format": "prettier --write .",
-    "test": "vitest",
-    "check": "pnpm lint && pnpm test -- --run && tsc -b --noEmit"
-  }
-}
-```
-
----
-
-## 4) Styling (Tailwind + tiny UI kit)
-```bash
-pnpm add -D tailwindcss postcss autoprefixer
-npx tailwindcss init -p
-```
-
-`tailwind.config.js`
-```js
-export default {
-  content: ["./index.html", "./src/**/*.{ts,tsx}"],
-  theme: { extend: {} },
-  plugins: [],
-};
-```
-
-`src/styles/tailwind.css`
-```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-```
-
-Add to `src/main.tsx`:
-```ts
-import "./styles/tailwind.css";
-```
-
-> Optional: **shadcn/ui** later for a few polished primitives (Button, Input, Dialog) without going full UI framework.
-
----
-
-## 5) Routing & App Shell
-```bash
-pnpm add react-router-dom
-```
-
-`src/app/router.tsx`
-
-- create app shell
-
----
-
 ## 6) Supabase (Auth + DB)
 
 ### Why Supabase for a Vite SPA
@@ -280,86 +135,6 @@ VITE_SUPABASE_URL=...
 VITE_SUPABASE_ANON_KEY=...
 ```
 
-### Client
-
-`pnpm add @supabase/supabase-js`
-
-`src/lib/supabase.ts`
-```ts
-import { getSupabaseClient } from "@/lib/supabase";
-
-export const supabase = getSupabaseClient();
-```
-
-> Always import `getSupabaseClient` (or a helper that wraps it) instead of calling `createClient` inside components so the app reuses a single authenticated instance.
-
-### Auth (magic link + allowlist)
-
-Create a table for allowlisting emails:
-```sql
-create table public.allowed_emails (
-  email text primary key
-);
-```
-
-Enable **Row Level Security** on any user tables. Example login flow UI:
-
-`src/features/auth/LoginForm.tsx`
-```tsx
-import { useState } from "react";
-import { getSupabaseClient } from "@/lib/supabase";
-
-const supabase = getSupabaseClient();
-
-export function LoginForm() {
-  const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    // Optional: check allowlist server-side via Supabase RPC or
-    // client-side precheck (not security; just UX). Real gate = RLS.
-    const { error } = await supabase.auth.signInWithOtp({ email });
-    if (!error) setSent(true);
-  }
-  return (
-    <form onSubmit={onSubmit} className="max-w-sm space-y-3">
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-        className="border p-2 w-full"
-        placeholder="you@example.com"
-      />
-      <button className="border px-3 py-2">Send magic link</button>
-      {sent && <p>Check your email for a sign-in link.</p>}
-    </form>
-  );
-}
-```
-
-Use an **AuthProvider** to expose `session`:
-
-`src/app/providers.tsx`
-```tsx
-import { ReactNode, useEffect, useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import type { Session } from "@supabase/supabase-js";
-const qc = new QueryClient();
-export function Providers({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
-    return () => sub.subscription.unsubscribe();
-  }, []);
-  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
-}
-```
-
-> Gate routes by checking `session` and redirecting to `/login`.
-
 ### Database: minimal schema
 
 > **Security**: RLS ensures only the signed-in user can see/change their rows. Avoid trusting client prechecks.
@@ -369,15 +144,6 @@ export function Providers({ children }: { children: ReactNode }) {
 Install Supabase CLI and run typegen to produce TS types from your DB (reduces `any`). For early stages you can hand-write `types.ts`.
 
 > **Migrations**: prefer `supabase db push` during early dev; graduate to versioned migrations (`supabase migration new`) as the schema stabilizes.
-
----
-
-## 7) Data Fetching Patterns (TanStack Query)
-```bash
-pnpm add @tanstack/react-query
-```
-
-> ⚠️ Error handling: wrap critical routes/pages with an error boundary and surface query errors via a toast/snackbar.
 
 ---
 
