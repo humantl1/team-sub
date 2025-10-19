@@ -10,10 +10,15 @@ import type { AppError, InsertTeamPayload, TeamRecord } from './types'
  * Create a new team for the current user. Wrapping the Supabase insert inside a TanStack mutation
  * gives callers loading/error flags while letting us keep the teams list cached in sync.
  */
+type CreateTeamMutationContext = {
+  previousTeams: TeamRecord[] | undefined
+}
+
 export function useCreateTeamMutation(): UseMutationResult<
   TeamRecord,
   AppError,
-  InsertTeamPayload
+  InsertTeamPayload,
+  CreateTeamMutationContext
 > {
   const queryClient = useQueryClient()
   const supabase = getSupabaseClient()
@@ -48,13 +53,15 @@ export function useCreateTeamMutation(): UseMutationResult<
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: teamsListKey })
 
-      const previousTeams = queryClient.getQueryData<TeamRecord[]>(teamsListKey) ?? []
+      const previousTeams = queryClient.getQueryData<TeamRecord[] | undefined>(teamsListKey)
 
       return { previousTeams }
     },
     onError: (_error, _variables, context) => {
-      if (context?.previousTeams) {
+      if (context?.previousTeams !== undefined) {
         queryClient.setQueryData(teamsListKey, context.previousTeams)
+      } else {
+        queryClient.removeQueries({ queryKey: teamsListKey })
       }
     },
     onSuccess: (newTeam) => {

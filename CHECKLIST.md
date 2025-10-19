@@ -19,6 +19,7 @@
 - [ ] Add TanStack Query hooks for players, games, roster slots, positions, and substitutions once Teams APIs are stable
 
 ## Completed
+- [x] Preserve undefined teams cache state when create mutations fail
 - [x] Add TanStack Query hooks for Teams data operations
 - [x] Add logout flow test ensuring `supabase.auth.signOut` clears session
 - [x] Add SupabaseAuthProvider session-restoration test covering `getSession`
