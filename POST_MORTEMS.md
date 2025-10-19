@@ -177,3 +177,29 @@
 - When adding views, always pair them with explicit privilege statements (and `security_invoker`) so Supabase’s telemetry matches our RLS posture.
 - Revisit the auth invite story intentionally—either reintroduce a first-class allowlist or document the open registration stance—before exposing roster management more broadly.
 - Next focus areas: wire TanStack Query hooks, generate Supabase types, and add flow-level tests so the new schema starts powering the app.
+
+# Post Mortem: TanStack Query teams hooks rollout (2025-02-18)
+
+## Issues Encountered
+
+### Supabase client mocking ergonomics
+- Each hook test needs a predictable Supabase interface (`from().select().order()`, etc.). Building the stub inline for every test quickly became noisy and error-prone.
+- Resolved by centralising a `createSupabaseStub` helper inside the test suite so we can reset call stacks consistently while still asserting on chained method usage.
+
+### Manual type drift risk
+- Without generated types, `TeamRecord` and the camelCase mapper could silently diverge from `supabase/schema.sql`.
+- Mitigated by introducing a fixture-based assertion that maps a representative Supabase row and fails if new columns appear, keeping the hand-written shape honest until typegen lands.
+
+### Optimistic cache rollbacks
+- Early mutation implementations re-threw errors from `onError`, which caused the optimistic rollback logic to be skipped when callers awaited `mutateAsync`.
+- Fixed by letting `onError` handle cache restoration and relying on the rejection emitted by TanStack Query automatically, so state is restored even when consumers handle the promise manually.
+
+## Resolutions
+- Added shared helpers (`types`, `queryKeys`, `mappers`, `error`) to consolidate conventions and keep future feature slices consistent.
+- Recorded comprehensive hook tests (success, error, cache-sync) to validate the behaviour end-to-end and document the stub pattern for upcoming player/game hooks.
+- Updated the checklist and agent notes so the remaining Supabase feature work (players/games/etc.) explicitly references the new foundation.
+
+## Lessons Learned / Action Items
+- Prior to expanding into other tables, extract the Supabase test stub into `src/test/` so future suites do not reimplement the same helper logic.
+- Adopt Supabase type generation soon to eliminate the remaining manual type maintenance and reduce fixture overhead.
+- Keep mutation `onError` handlers focused on cache reconciliation; allow the rejection to propagate naturally so UI callers can own their experience without duplicating rollback concerns.

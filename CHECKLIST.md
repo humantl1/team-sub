@@ -2,7 +2,6 @@
 
 ## Active
 - [ ] Maintain Supabase CLI schema sync after every Supabase change (`supabase db dump --schema public > supabase/schema.sql`)
-- [ ] Add TanStack Query hooks for core data operations
 - [ ] Tighten Supabase roster/substitution RLS to enforce team alignment
 
 ## Planned
@@ -14,10 +13,13 @@
 - [ ] Generate Supabase TypeScript types and adopt them inside the client helper
 - [ ] Seed baseline sports and default positions inside Supabase so new teams inherit sensible defaults
 - [ ] Extend Vitest coverage for Supabase data flows (team creation, default-position cloning, roster guards)
+- [ ] Add mocked Supabase client tests covering cross-team roster slot and substitution attempts
 - [ ] Document the approved database schema in README or a dedicated schema doc for future contributors
 - [ ] Clone default positions when a team is created and expose a "reset to defaults" control
+- [ ] Add TanStack Query hooks for players, games, roster slots, positions, and substitutions once Teams APIs are stable
 
 ## Completed
+- [x] Add TanStack Query hooks for Teams data operations
 - [x] Add logout flow test ensuring `supabase.auth.signOut` clears session
 - [x] Add SupabaseAuthProvider session-restoration test covering `getSession`
 - [x] Refine SupabaseAuthProvider tests to use a shared session mock factory

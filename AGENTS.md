@@ -31,8 +31,7 @@ Active players will appear in an interactive list
 
 ## Supabase CLI schema sync workflow
 
-- **Immediately after linking**: run `supabase db dump --schema public > supabase/schema.sql` once so the repository baseline reflects the remote database before any new changes land.
-- **After every remote schema change**: execute `supabase db dump --schema public > supabase/schema.sql`. This overwrites the repo copy with the live schema so the agent and developer share an exact model.
+- **IMPORTANT!! After every remote schema change**: execute `supabase db dump --schema public > supabase/schema.sql`. This overwrites the repo copy with the live schema so the agent and developer share an exact model.
 - **Health check before starting DB work**: run `supabase db diff --schema public`. An empty diff confirms there is no drift between the repo SQL and Supabase. Investigate and dump again if differences appear.
 - **Keep Supabase the source of truth**: anytime the developer runs SQL directly in the dashboard or accepts queries from the agent, immediately follow up with the dump command above. Without that step, the agent’s understanding of the schema will fall out of sync.
 - `.supabase/` stays git-ignored so access tokens and project metadata never leave the local machine. Never commit the service role key or the generated config file.
