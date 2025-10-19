@@ -290,6 +290,33 @@ describe('useCreateTeamMutation', () => {
 
     expect(queryClient.getQueryData<TeamRecord[]>(teamsListKey)).toEqual([mappedTeam])
   })
+
+  it('preserves an undefined cache when Supabase rejects the insert', async () => {
+    const supabaseStub = createSupabaseStub()
+    mockedGetSupabaseClient.mockReturnValue(supabaseStub as unknown as SupabaseClient)
+
+    const select = vi
+      .fn()
+      .mockReturnValue({
+        single: vi
+          .fn()
+          .mockResolvedValue({ data: null, error: { code: '500', message: 'Boom' } }),
+      })
+    supabaseStub.table.insert.mockReturnValue({ select })
+
+    const { queryClient, wrapper } = createQueryClientWrapper()
+
+    const { result } = renderHook(() => useCreateTeamMutation(), { wrapper })
+    const payload: InsertTeamPayload = { name: 'New Team', sportId: 'sport-999' }
+
+    await expect(
+      act(async () => {
+        await result.current.mutateAsync(payload)
+      }),
+    ).rejects.toThrow()
+
+    expect(queryClient.getQueryData<TeamRecord[]>(teamsListKey)).toBeUndefined()
+  })
 })
 
 describe('useUpdateTeamMutation', () => {
