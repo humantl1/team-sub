@@ -4,7 +4,7 @@ import { toAppError } from './error'
 import { mapTeamRow } from './mappers'
 import { teamDetailKey, teamsListKey } from './queryKeys'
 import { TEAM_SELECT_COLUMNS, type TeamSelectRow } from './selects'
-import type { AppError, TeamRecord, UpdateTeamPayload } from './types'
+import type { AppError, TeamRecord, TeamUpdateRow, UpdateTeamPayload } from './types'
 
 /**
  * Update an existing team while keeping local caches in sync. The mutation performs lightweight
@@ -21,7 +21,7 @@ export function useUpdateTeamMutation(): UseMutationResult<
 
   return useMutation<TeamRecord, AppError, UpdateTeamPayload>({
     mutationFn: async ({ teamId, name, sportId, notes }) => {
-      const updates: Record<string, unknown> = {}
+      const updates: TeamUpdateRow = {}
 
       if (name !== undefined) {
         updates.name = name

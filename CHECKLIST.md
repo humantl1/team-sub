@@ -4,23 +4,23 @@
 - [ ] Maintain Supabase CLI schema sync after every Supabase change (`supabase db dump --schema public > supabase/schema.sql`)
 
 ## Planned
-- [ ] Outline roster-focused test scenarios covering player addition, reordering, and substitution flow edge cases
-- [ ] Build roster management MVP (list, add, substitute players)
-- [ ] Configure deployment target (Vercel or Netlify) with env vars
-- [ ] Set up CI workflow running `pnpm check`
-- [ ] Extract shared Supabase test utilities (mock factories, env stubbing) to `src/test/` so upcoming feature tests reuse the patterns without duplicating setup.
-- [ ] Generate Supabase TypeScript types and adopt them inside the client helper
-- [ ] Seed baseline sports and default positions inside Supabase so new teams inherit sensible defaults
-- [ ] Extend Vitest coverage for Supabase data flows (team creation, default-position cloning, roster guards)
-- [ ] Add an integration-style test that mounts the full auth provider + router stack (AppProviders + RequireAuth + router) so we verify the loading indicator clears, redirected routes resolve, and the login form re-enables when no session exists. Include a scenario where the profile sync promise stays pending to ensure the UI still becomes interactive.
-- [ ] Add mocked Supabase client tests covering cross-team roster slot and substitution attempts
-- [ ] Document the approved database schema in README or a dedicated schema doc for future contributors
-- [ ] Clone default positions when a team is created and expose a "reset to defaults" control
-- [ ] Add TanStack Query hooks for players, games, roster slots, positions, and substitutions once Teams APIs are stable
-- [ ] Silence the Vitest Supabase GoTrue warning by consolidating test client usage or dedicated stubs
-- [ ] Revisit the auth invite/allowlist story and document the chosen approach before exposing roster management broadly
+- [ ] Extract shared Supabase test utilities (mock factories, env stubbing) to `src/test/` so upcoming feature tests reuse the patterns without duplicating setup. _(Dependencies: none)_
+- [ ] Set up CI workflow running `pnpm check` _(Dependencies: none)_
+- [ ] Add TanStack Query hooks for players, games, roster slots, positions, and substitutions once Teams APIs are stable _(Dependencies: Generate Supabase TypeScript types task)_
+- [ ] Seed baseline sports and default positions inside Supabase so new teams inherit sensible defaults _(Dependencies: none)_
+- [ ] Outline roster-focused test scenarios covering player addition, reordering, and substitution flow edge cases _(Dependencies: none)_
+- [ ] Add an integration-style test that mounts the full auth provider + router stack (AppProviders + RequireAuth + router) so we verify the loading indicator clears, redirected routes resolve, and the login form re-enables when no session exists. Include a scenario where the profile sync promise stays pending to ensure the UI still becomes interactive. _(Dependencies: Extract shared Supabase test utilities task)_
+- [ ] Add mocked Supabase client tests covering cross-team roster slot and substitution attempts _(Dependencies: Extract shared Supabase test utilities task; Add TanStack Query hooks task)_
+- [ ] Extend Vitest coverage for Supabase data flows (team creation, default-position cloning, roster guards) _(Dependencies: Extract shared Supabase test utilities task; Generate Supabase TypeScript types task; Seed baseline sports/default positions task; Add TanStack Query hooks task)_
+- [ ] Silence the Vitest Supabase GoTrue warning by consolidating test client usage or dedicated stubs _(Dependencies: Extract shared Supabase test utilities task)_
+- [ ] Clone default positions when a team is created and expose a "reset to defaults" control _(Dependencies: Seed baseline sports/default positions task; Add TanStack Query hooks task)_
+- [ ] Build roster management MVP (list, add, substitute players) _(Dependencies: Outline roster-focused test scenarios task; Add TanStack Query hooks task; Clone default positions task; Seed baseline sports/default positions task)_
+- [ ] Document the approved database schema in README or a dedicated schema doc for future contributors _(Dependencies: Seed baseline sports/default positions task; Clone default positions task)_
+- [ ] Revisit the auth invite/allowlist story and document the chosen approach before exposing roster management broadly _(Dependencies: Build roster management MVP task)_
+- [ ] Configure deployment target (Vercel or Netlify) with env vars _(Dependencies: Build roster management MVP task; Revisit the auth invite/allowlist story task)_
 
 ## Completed
+- [x] Generate Supabase TypeScript types and adopt them inside the client helper
 - [x] Upsert `app_users` profile rows immediately after Supabase authentication so RLS policies resolve the owner id
 - [x] Tighten Supabase roster/substitution RLS to enforce team alignment
 - [x] Preserve undefined teams cache state when create mutations fail

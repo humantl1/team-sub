@@ -1,19 +1,11 @@
+import type { Tables } from '@/lib/supabase.types'
 import type { TeamRecord } from './types'
 
 /**
- * Shape returned by Supabase when selecting from the `teams` table. The query hooks call this helper
- * so the rest of the app can consume camelCased properties without leaking database naming
- * conventions into UI components or tests.
+ * Alias for the raw `teams` row returned by Supabase. Referencing the generated schema keeps this
+ * helper aligned with the database without maintaining a parallel type definition manually.
  */
-export type SupabaseTeamRow = {
-  id: string
-  owner_id: string
-  sport_id: string
-  name: string
-  notes: string | null
-  created_at: string
-  updated_at: string
-}
+export type SupabaseTeamRow = Tables<'teams'>
 
 /**
  * Convert a raw Supabase row into the strongly typed `TeamRecord` consumed by the rest of the app.

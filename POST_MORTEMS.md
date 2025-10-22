@@ -234,3 +234,23 @@
 - Auth listeners may fire more often than expected; deduplicate by event type or signature to prevent noisy, redundant writes.
 - Keep shared helpers injectable so tests can observe side effects directly, rather than asserting through React state alone.
 - Next follow-ups: generate Supabase types to reduce manual schema drift risk and outline roster flow tests based on the now-unblocked profile rows.
+# Post Mortem: Supabase teams typings migration
+
+## Issues Encountered
+
+### Temporary TypeScript projections lingered after type generation
+- The teams API still depended on hand-written interfaces (`TeamRecord`, `SupabaseTeamRow`, manual insert/update payloads) even after generating `src/lib/supabase.types.ts`, creating drift risk whenever the database evolved.
+- Refactoring required chasing these aliases through multiple helpers (`mappers.ts`, `selects.ts`, mutation hooks) to ensure nothing still referenced the manual shapes.
+
+### Mapping camelCase domain models onto snake_case database fields
+- The React layer expects camelCase properties, while `Tables<'teams'>` exposes the raw snake_case column names. The initial refactor briefly attempted to re-export the raw generated type, which would have leaked snake_case naming into the UI.
+- Resolved by keeping the existing mapper but redefining it in terms of the generated table row type so both layers stay typed accurately without renaming columns manually.
+
+## Resolutions
+- Introduced `TeamInsertRow`/`TeamUpdateRow` aliases that extend the generated Supabase insert/update helpers, guaranteeing future migrations automatically update the mutation shapes.
+- Updated all teams API modules to import `Tables<'teams'>` directly, replacing the bespoke types while preserving camelCased `TeamRecord` values for the rest of the app.
+- ran `pnpm test -- --run` to confirm the hooks and mappers still behave correctly; the suites passed with only the expected error-boundary logs.
+
+## Lessons Learned / Action Items
+- After generating Supabase typings, immediately sweep feature slices for manual projections so they cannot silently diverge from the schema.
+- Keep mapper functions in place to translate between database naming conventions and UI-friendly shapes; they provide a natural seam for enforcing consistency while leveraging generated types underneath.
