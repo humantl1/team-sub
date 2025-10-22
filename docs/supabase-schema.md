@@ -115,7 +115,7 @@ where sport_id = :sport_id
 To reset a team back to defaults later, delete the coach-owned rows and re-run the same insert statement. When we build the TanStack Query mutation this SQL acts as the source of truth.
 
 ## 4. Application follow-ups
-- **Auth hook:** Ensure the app upserts a row into `public.app_users` immediately after a successful Supabase login. Without that row the RLS policies cannot resolve ownership.
+- **Auth hook (implemented):** The SPA automatically upserts a sanitized `public.app_users` row after sign-in so RLS helpers like `app_current_user_id()` resolve the owner id. Token refresh events reuse the existing row thanks to user-id tracking, and the helper strips control characters plus clamps display names before persisting.
 - **Type generation:** After the schema is live, regenerate Supabase TypeScript types so the client receives end-to-end type safety. Command: `supabase gen types typescript --project-id <id> --schema public > src/lib/database.types.ts`.
 - **Testing:** Extend Vitest suites to cover happy-path queries/mutations and verify RLS handling using mocked Supabase clients. The schema relies on the default position duplication logic, so plan tests around that behavior as soon as the feature is wired.
 

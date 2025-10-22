@@ -9,11 +9,17 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
-import type { Session, SupabaseClient } from '@supabase/supabase-js'
+import type { AuthChangeEvent, Session, SupabaseClient } from '@supabase/supabase-js'
 import { getSupabaseClient } from '@/lib/supabase'
+import {
+  deriveDisplayName,
+  ensureAppUserProfile,
+  isProfileSyncError,
+} from './ensureAppUserProfile'
 
 /**
  * Description of the values exposed by the auth context. We surface the raw
@@ -66,6 +72,48 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(() => supabase !== null ? true : false)
   const [error, setError] = useState<string | null>(clientError)
+  const lastProfileSyncSignatureRef = useRef<string | null>(null)
+  const isMountedRef = useRef(false)
+
+  const syncProfileIfNeeded = useCallback(
+    async (nextSession: Session | null) => {
+      if (!supabase) {
+        return
+      }
+
+      if (!nextSession) {
+        lastProfileSyncSignatureRef.current = null
+        setError((current) => (isProfileSyncError(current) ? null : current))
+        return
+      }
+
+      const displayName = deriveDisplayName(nextSession)
+      const signature = `${nextSession.user.id}:${displayName ?? ''}`
+
+      if (lastProfileSyncSignatureRef.current === signature) {
+        return
+      }
+
+      const result = await ensureAppUserProfile({
+        supabase,
+        authUserId: nextSession.user.id,
+        displayName,
+      })
+
+      if (!isMountedRef.current) {
+        return
+      }
+
+      if (!result.ok) {
+        setError(result.errorMessage)
+        return
+      }
+
+      lastProfileSyncSignatureRef.current = signature
+      setError((current) => (isProfileSyncError(current) ? null : current))
+    },
+    [supabase],
+  )
 
   useEffect(() => {
     if (!supabase) {
@@ -77,25 +125,39 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
       return
     }
 
-    let isMounted = true
+    isMountedRef.current = true
 
     async function bootstrapSession() {
       setIsLoading(true)
-      const { data, error: sessionError } = await supabase.auth.getSession()
 
-      if (!isMounted) {
+      let data: { session: Session | null } | null = null
+      let sessionError: Error | null = null
+
+      try {
+        const response = await supabase.auth.getSession()
+        data = response.data
+        sessionError = response.error
+      } catch (caught) {
+        sessionError = caught instanceof Error ? caught : new Error('Failed to fetch session')
+      }
+
+      if (!isMountedRef.current) {
         return
       }
 
       if (sessionError) {
-        // Persist a friendly error message so the login screen can surface it to the user.
         setError(sessionError.message)
         setSession(null)
-      } else {
-        setError(null)
-        setSession(data.session ?? null)
+        void syncProfileIfNeeded(null)
+        setIsLoading(false)
+        return
       }
 
+      const nextSession = data?.session ?? null
+
+      setError(null)
+      setSession(nextSession)
+      void syncProfileIfNeeded(nextSession)
       setIsLoading(false)
     }
 
@@ -106,21 +168,32 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
      * Subscribing here keeps the React state synchronized without polling.
      */
     const { data: listener, error: listenerError } = supabase.auth.onAuthStateChange(
-      (_event, nextSession) => {
+      (event: AuthChangeEvent, nextSession) => {
+        if (!isMountedRef.current) {
+          return
+        }
+
         setSession(nextSession)
+
+        if (event === 'SIGNED_OUT' || !nextSession) {
+          void syncProfileIfNeeded(null)
+          return
+        }
+
+        void syncProfileIfNeeded(nextSession)
       },
     )
 
-    if (listenerError && isMounted) {
+    if (listenerError && isMountedRef.current) {
       // Surface the subscription error so the login flow can signal configuration/network issues.
       setError(listenerError.message)
     }
 
     return () => {
-      isMounted = false
       listener?.subscription.unsubscribe()
+      isMountedRef.current = false
     }
-  }, [supabase])
+  }, [supabase, syncProfileIfNeeded])
 
   /**
    * Tiny helper that wraps `supabase.auth.signOut` so consumers do not have to import the client.
@@ -141,6 +214,7 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
     } else {
       setError(null)
       setSession(null)
+      lastProfileSyncSignatureRef.current = null
     }
 
     setIsLoading(false)

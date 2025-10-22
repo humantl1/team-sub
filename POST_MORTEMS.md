@@ -132,7 +132,7 @@
 - Add focused tests for the login success/error states, session restoration, and logout to prevent regressions without relying on manual walkthroughs.
 - Consider documenting the Supabase policy SQL in the repo (migration or README snippet) so others can reproduce the setup without digging through history.
 
-# Post Mortem: Supabase auth provider test coverage sweep (2025-02-14)
+# Post Mortem: Supabase auth provider test coverage sweep
 
 ## Issues Encountered
 
@@ -151,7 +151,7 @@
 - When reaching for additional Testing Library helpers, double-check whether the dependency is part of the current toolchain before adopting it; prefer the existing primitives when they meet the need.
 - Annotate checklist items once covered to prevent future rediscovery work—especially when the checklist mixes real gaps with verification tasks.
 
-# Post Mortem: Supabase schema rollout & allowlist cleanup (2025-02-15)
+# Post Mortem: Supabase schema rollout & allowlist cleanup
 
 ## Issues Encountered
 
@@ -178,7 +178,7 @@
 - Revisit the auth invite story intentionally—either reintroduce a first-class allowlist or document the open registration stance—before exposing roster management more broadly.
 - Next focus areas: wire TanStack Query hooks, generate Supabase types, and add flow-level tests so the new schema starts powering the app.
 
-# Post Mortem: TanStack Query teams hooks rollout (2025-02-18)
+# Post Mortem: TanStack Query teams hooks rollout
 
 ## Issues Encountered
 
@@ -203,3 +203,34 @@
 - Prior to expanding into other tables, extract the Supabase test stub into `src/test/` so future suites do not reimplement the same helper logic.
 - Adopt Supabase type generation soon to eliminate the remaining manual type maintenance and reduce fixture overhead.
 - Keep mutation `onError` handlers focused on cache reconciliation; allow the rejection to propagate naturally so UI callers can own their experience without duplicating rollback concerns.
+# Post Mortem: Auth profile upsert integration
+
+## Issues Encountered
+
+### No profile row on restored sessions
+- The existing `SupabaseAuthProvider` only synchronized React state. When a user signed in on another device or hard-reloaded the SPA, `app_users` remained empty, causing RLS policies to reject subsequent `teams` inserts.
+- Fix required introducing a dedicated helper (`ensureAppUserProfile`) and invoking it after both the initial `getSession` check and every auth event so restored sessions also create their profile row.
+
+### Supabase auth events fire on token refresh
+- Supabase emits `TOKEN_REFRESHED` frequently. Naively upserting on every event would spam the database, obscure true failures, and complicate logs.
+- Resolved by tracking the last processed signature (`user.id` + sanitized display name) and skipping any refresh that doesn’t change those values.
+
+### Display name safety concerns
+- `session.user.user_metadata.full_name` is user-provided and occasionally missing, purely whitespace, or full of control characters.
+- Added a sanitizer that coerces candidates to strings, strips control characters, trims whitespace, and clamps zany lengths before persisting the value.
+
+### Testing ergonomics
+- Provider tests needed a seam to observe the helper while keeping component state assertions intact.
+- Mocked the helper inside the regression suite so we could assert call counts/arguments and force error results without duplicating Supabase stubs.
+
+## Resolutions
+- Introduced `ensureAppUserProfile` with sanitisation and explicit error messaging; the auth provider calls it exactly once per unique session/display-name combination.
+- Updated the provider to clear out profile-sync errors when the session signs out and to skip redundant work during token refresh events.
+- Expanded tests to confirm helper invocation, happy-path arguments, and resilience when Supabase returns an error. The helper itself has unit coverage.
+- Documented the behaviour in `docs/supabase-schema.md` and refreshed `CHECKLIST.md` and `AGENT_NOTES.md` so future tasks don’t rehash the gap.
+
+## Lessons Learned / Action Items
+- When wiring Supabase auth, treat session metadata as untrusted input—always sanitise before storing anything that could render in the UI.
+- Auth listeners may fire more often than expected; deduplicate by event type or signature to prevent noisy, redundant writes.
+- Keep shared helpers injectable so tests can observe side effects directly, rather than asserting through React state alone.
+- Next follow-ups: generate Supabase types to reduce manual schema drift risk and outline roster flow tests based on the now-unblocked profile rows.

@@ -1,6 +1,7 @@
 # Agent Notes
 
 ## Recent work
+- Added an `app_users` profile sync that runs after Supabase authentication, sanitizes the display name, and skips redundant upserts during token refresh events.
 - Expanded Supabase auth regression coverage: confirmed LoginForm already handles happy/error flows, added session restoration and logout tests to `SupabaseAuthProvider`, and kept `CHECKLIST.md` aligned with the verified scenarios.
 - Enabled Supabase magic-link login flow end-to-end (env vars, allowlist, smoke test)
 - Wired the Supabase auth provider, route guard, and magic-link login form; navigation now reflects the active session and new tests cover the form plus access control flows.
@@ -13,11 +14,10 @@
 - Tightened roster/substitution RLS policies to enforce same-team player alignment and annotated the SQL so future edits keep the guard intact.
 
 ## Suggested Next Steps
-1. Upsert `app_users` profile rows immediately after Supabase authentication so RLS policies resolve the owner id.
-2. Generate Supabase TypeScript types and adopt them inside the client helper once the schema stabilizes.
-3. Extend Vitest suites to cover Supabase data flows (queries/mutations, default-position cloning) using mocked clients—players/games/roster slots remain outstanding.
-4. Wire TanStack Query hooks for players, games, roster slots, positions, and substitutions using the new teams hooks as a template.
+1. Generate Supabase TypeScript types and adopt them inside the client helper once the schema stabilizes.
+2. Extend Vitest suites to cover Supabase data flows (queries/mutations, default-position cloning) using mocked clients—players/games/roster slots remain outstanding.
+3. Wire TanStack Query hooks for players, games, roster slots, positions, and substitutions using the new teams hooks as a template.
     - Extract the Supabase stub helper into src/test/ before implementing player/game hooks.
-5. Outline roster-focused test scenarios (add player, reorder list, substitution flow) to guide upcoming feature work.
-6. Seed baseline sports and default position records so new teams can inherit sensible defaults without manual setup.
-7. Add mocked Supabase client tests that prove roster slot/substitution mutations reject cross-team players and succeed for valid teams.
+4. Outline roster-focused test scenarios (add player, reorder list, substitution flow) to guide upcoming feature work.
+5. Seed baseline sports and default position records so new teams can inherit sensible defaults without manual setup.
+6. Add mocked Supabase client tests that prove roster slot/substitution mutations reject cross-team players and succeed for valid teams.

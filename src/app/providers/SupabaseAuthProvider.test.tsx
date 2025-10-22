@@ -1,10 +1,12 @@
 /**
  * Regression tests for the SupabaseAuthProvider to ensure lifecycle edge cases are handled safely.
  */
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { afterEach, beforeEach, vi } from 'vitest'
 import { SupabaseAuthProvider, useSupabaseAuth } from './SupabaseAuthProvider'
+import { ensureAppUserProfile } from './ensureAppUserProfile'
+import type { EnsureAppUserProfileResult } from './ensureAppUserProfile'
 import { getSupabaseClient } from '@/lib/supabase'
 
 vi.mock('@/lib/supabase', () => ({
@@ -12,6 +14,19 @@ vi.mock('@/lib/supabase', () => ({
 }))
 
 const mockGetSupabaseClient = vi.mocked(getSupabaseClient)
+
+vi.mock('./ensureAppUserProfile', async () => {
+  const actual = await vi.importActual<typeof import('./ensureAppUserProfile')>(
+    './ensureAppUserProfile',
+  )
+
+  return {
+    ...actual,
+    ensureAppUserProfile: vi.fn().mockResolvedValue({ ok: true }),
+  }
+})
+
+const mockEnsureAppUserProfile = vi.mocked(ensureAppUserProfile)
 
 function createSupabaseClientMock(overrides: Partial<SupabaseClient['auth']> = {}) {
   return {
@@ -71,6 +86,7 @@ function Consumer() {
 
 beforeEach(() => {
   mockGetSupabaseClient.mockReturnValue(createSupabaseClientMock())
+  mockEnsureAppUserProfile.mockResolvedValue({ ok: true })
 })
 
 afterEach(() => {
@@ -152,6 +168,50 @@ describe('SupabaseAuthProvider', () => {
     })
 
     expect(getSessionMock).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(mockEnsureAppUserProfile).toHaveBeenCalledTimes(1))
+    const ensureArgs = mockEnsureAppUserProfile.mock.calls.at(-1)?.[0]
+    expect(ensureArgs?.authUserId).toBe('user-123')
+  })
+
+  it('clears loading state even while profile sync is still pending', async () => {
+    const mockSession = createSessionMock()
+
+    let resolveProfileSync: ((result: EnsureAppUserProfileResult) => void) | undefined
+    mockEnsureAppUserProfile.mockImplementationOnce(
+      () =>
+        new Promise<EnsureAppUserProfileResult>((resolve) => {
+          resolveProfileSync = resolve
+        }),
+    )
+
+    mockGetSupabaseClient.mockReturnValue(
+      createSupabaseClientMock({
+        getSession: vi.fn().mockResolvedValue({ data: { session: mockSession }, error: null }),
+      }),
+    )
+
+    function LoadingConsumer() {
+      const { isLoading } = useSupabaseAuth()
+      return <span data-testid="loading-indicator">{isLoading ? 'loading' : 'idle'}</span>
+    }
+
+    render(
+      <SupabaseAuthProvider>
+        <LoadingConsumer />
+      </SupabaseAuthProvider>,
+    )
+
+    expect(screen.getByTestId('loading-indicator')).toHaveTextContent('loading')
+
+    await waitFor(() => {
+      expect(screen.getByTestId('loading-indicator')).toHaveTextContent('idle')
+    })
+
+    expect(mockEnsureAppUserProfile).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      resolveProfileSync?.({ ok: true })
+    })
   })
 
   it('clears the session when signOut succeeds', async () => {
@@ -204,5 +264,27 @@ describe('SupabaseAuthProvider', () => {
     })
 
     expect(signOutMock).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(mockEnsureAppUserProfile).toHaveBeenCalledTimes(1))
+  })
+
+  it('surfaces profile sync failures without crashing the provider', async () => {
+    const mockSession = createSessionMock()
+    const failureMessage = 'Profile sync failed: network issue'
+
+    mockEnsureAppUserProfile.mockResolvedValueOnce({ ok: false, errorMessage: failureMessage })
+
+    mockGetSupabaseClient.mockReturnValue(
+      createSupabaseClientMock({
+        getSession: vi.fn().mockResolvedValue({ data: { session: mockSession }, error: null }),
+      }),
+    )
+
+    render(
+      <SupabaseAuthProvider>
+        <Consumer />
+      </SupabaseAuthProvider>,
+    )
+
+    await waitFor(() => expect(screen.getByText(failureMessage)).toBeInTheDocument())
   })
 })
