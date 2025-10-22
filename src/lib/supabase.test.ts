@@ -12,6 +12,9 @@ vi.mock("@supabase/supabase-js", () => ({
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 const mockedCreateClient = vi.mocked(createClient);
 
+// Reuse the strongly typed database schema so our tests verify the same surface area as production.
+import type { Database } from "./supabase.types";
+
 import {
   __resetSupabaseClientForTesting,
   createSupabaseClientFromEnv,
@@ -32,7 +35,7 @@ beforeEach(() => {
           onAuthStateChange: vi.fn(),
           getSession: vi.fn(),
         },
-      }) as unknown as SupabaseClient,
+      }) as unknown as SupabaseClient<Database>,
   );
 });
 

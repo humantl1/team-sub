@@ -4,7 +4,7 @@ import { toAppError } from './error'
 import { mapTeamRow } from './mappers'
 import { teamDetailKey, teamsListKey } from './queryKeys'
 import { TEAM_SELECT_COLUMNS, type TeamSelectRow } from './selects'
-import type { AppError, InsertTeamPayload, TeamRecord } from './types'
+import type { AppError, InsertTeamPayload, TeamInsertRow, TeamRecord } from './types'
 
 /**
  * Create a new team for the current user. Wrapping the Supabase insert inside a TanStack mutation
@@ -29,14 +29,16 @@ export function useCreateTeamMutation(): UseMutationResult<
      * authenticated user id into `owner_id`, so the payload intentionally omits it.
      */
     mutationFn: async ({ name, sportId, notes = null }) => {
+      const insertPayload: TeamInsertRow = {
+        name,
+        sport_id: sportId,
+        // Supabase distinguishes between `null` and `undefined`, so we coerce here to avoid surprises.
+        notes: notes ?? null,
+      }
+
       const { data, error } = await supabase
         .from('teams')
-        .insert({
-          name,
-          sport_id: sportId,
-          // Supabase distinguishes between `null` and `undefined`, so we coerce here to avoid surprises.
-          notes: notes ?? null,
-        })
+        .insert(insertPayload)
         .select<TeamSelectRow>(TEAM_SELECT_COLUMNS)
         .single()
 

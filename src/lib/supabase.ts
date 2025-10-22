@@ -1,4 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+// Importing the generated Database typing keeps this helper aligned with the live Supabase schema.
+import type { Database } from "./supabase.types";
 
 /**
  * Narrow interface that captures only the Supabase-related keys we care about. Keeping it separate
@@ -8,18 +10,20 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 type SupabaseEnv = Pick<ImportMetaEnv, "VITE_SUPABASE_URL" | "VITE_SUPABASE_ANON_KEY">;
 
 /**
- * Module-level cache so every caller reuses the same browser client. Supabase maintains internal
+ * Module-level cache so every caller reuses the same Supabase client. Supabase maintains internal
  * state (auth tokens, listeners, etc.), and recreating the client repeatedly would sever those
- * connections and create multiple websocket subscriptions unnecessarily.
+ * connections and create multiple websocket subscriptions unnecessarily. Threading the generated
+ * `Database` type through `SupabaseClient` ensures downstream hooks get intellisense for tables,
+ * columns, and enums without hand-maintained types.
  */
-let client: SupabaseClient | null = null;
+let client: SupabaseClient<Database> | null = null;
 
 /**
  * Build a Supabase client from the provided env map. Keeping this logic in a pure function makes it
  * easy to unit test the guard rails around missing configuration while still reusing it inside the
  * production singleton.
  */
-export function createSupabaseClientFromEnv(env: SupabaseEnv): SupabaseClient {
+export function createSupabaseClientFromEnv(env: SupabaseEnv): SupabaseClient<Database> {
   const supabaseUrl = env.VITE_SUPABASE_URL;
   const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY;
 
@@ -50,7 +54,7 @@ export function createSupabaseClientFromEnv(env: SupabaseEnv): SupabaseClient {
       }`
     : undefined;
 
-  return createClient(supabaseUrl, supabaseAnonKey, {
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
       /**
        * Enabling persistent sessions ensures the browser keeps a user signed in across reloads so
@@ -72,7 +76,7 @@ export function createSupabaseClientFromEnv(env: SupabaseEnv): SupabaseClient {
  * Public accessor that lazily builds (and memoizes) the Supabase client using the real environment
  * variables. Future features should import this helper rather than calling `createClient` directly.
  */
-export function getSupabaseClient(): SupabaseClient {
+export function getSupabaseClient(): SupabaseClient<Database> {
   if (!client) {
     client = createSupabaseClientFromEnv(import.meta.env);
   }

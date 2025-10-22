@@ -29,12 +29,17 @@ Active players will appear in an interactive list
 - Maintain a running checklist entry when TODO comments or warnings appear in output so they do not get lost after the immediate change merges.
 - After completing a full task, ask the developer if a post mortem should be written to POST_MORTEMS.md
 
+# Network usage
+- use the command `lynx -dump -nolist "https://example.com"` to read web pages to extract pure text in a readable format
+
+
 ## Supabase CLI schema sync workflow
 
 - **IMPORTANT!! After every remote schema change**: execute `supabase db dump --schema public > supabase/schema.sql`. This overwrites the repo copy with the live schema so the agent and developer share an exact model.
 - **Health check before starting DB work**: run `supabase db diff --schema public`. An empty diff confirms there is no drift between the repo SQL and Supabase. Investigate and dump again if differences appear.
 - **Keep Supabase the source of truth**: anytime the developer runs SQL directly in the dashboard or accepts queries from the agent, immediately follow up with the dump command above. Without that step, the agent’s understanding of the schema will fall out of sync.
 - `.supabase/` stays git-ignored so access tokens and project metadata never leave the local machine. Never commit the service role key or the generated config file.
+- To use the supabase cli, first run `supabase start`
 
 # General Troubleshooting
 - Flag the need for networked installs before running pnpm
